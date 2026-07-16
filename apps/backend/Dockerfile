@@ -13,6 +13,13 @@ WORKDIR /app
 COPY --from=build /workspace/apps/backend/dist ./dist
 COPY --from=build /workspace/apps/backend/node_modules ./node_modules
 COPY --from=build /workspace/apps/backend/package.json ./package.json
+# npm links @stardew/game-data relatively; the link breaks once node_modules
+# moves to /app, so replace it with the built package.
+COPY --from=build /workspace/packages/game-data/dist /tmp/game-data/dist
+COPY --from=build /workspace/packages/game-data/package.json /tmp/game-data/package.json
+RUN rm -rf node_modules/@stardew/game-data \
+ && mkdir -p node_modules/@stardew \
+ && mv /tmp/game-data node_modules/@stardew/game-data
 RUN mkdir -p /app/data && chown -R node:node /app
 USER node
 EXPOSE 3001
