@@ -1,0 +1,2 @@
+.journal-app > .skip-link { top: -100px; white-space: nowrap; }
+.journal-app > .skip-link:focus { top: 8px; }

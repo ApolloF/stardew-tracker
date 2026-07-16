@@ -57,9 +57,10 @@ const vault = [2500,5000,10000,25000].map((amount,i)=>bundle('vault',`vault-${am
 
 export const MISSING_BUNDLE = bundle('abandoned-jojamart','missing-bundle','The Missing Bundle',5,'Movie Theater',[
   item('wine','Wine','Age any wine in a cask',1,'silver'),item('dinosaur-mayonnaise','Dinosaur Mayonnaise','Process a Dinosaur Egg'),item('prismatic-shard','Prismatic Shard','Rare mining drop'),item('ancient-fruit','Ancient Fruit','Grow Ancient Seeds',5,'gold'),item('void-salmon','Void Salmon','Witch’s Swamp',1,'gold'),item('caviar','Caviar','Preserve Sturgeon Roe')]);
+MISSING_BUNDLE.spoilerTier='late-game';
 
 export const BUNDLE_ROOMS: BundleRoom[] = [
-  room('crafts-room','Crafts Room','🌲','Bridge Repair',crafts),room('pantry','Pantry','🌾','Greenhouse',pantry),room('fish-tank','Fish Tank','🐟','Glittering Boulder Removed',fish),room('boiler-room','Boiler Room','🔥','Minecarts Repaired',boiler),room('bulletin-board','Bulletin Board','📌','Friendship',board),room('vault','Vault','💰','Bus Repair',vault),room('abandoned-jojamart','Abandoned JojaMart','🎬','Movie Theater',[MISSING_BUNDLE]),
+  room('crafts-room','Crafts Room','🌲','Bridge Repair',crafts),room('pantry','Pantry','🌾','Greenhouse',pantry),room('fish-tank','Fish Tank','🐟','Glittering Boulder Removed',fish),room('boiler-room','Boiler Room','🔥','Minecarts Repaired',boiler),room('bulletin-board','Bulletin Board','📌','Friendship',board),room('vault','Vault','💰','Bus Repair',vault),{...room('abandoned-jojamart','Abandoned JojaMart','🎬','Movie Theater',[MISSING_BUNDLE]),spoilerTier:'late-game'},
 ];
 
 export function bundleCompleted(bundle: Bundle, completed: Record<string, boolean>): boolean {

@@ -1,4 +1,5 @@
 export type Season = 'Spring' | 'Summer' | 'Fall' | 'Winter';
+export type SpoilerTier = 'ordinary' | 'progression' | 'late-game';
 
 export interface SourceMeta {
   gameVersion: '1.6.15';
@@ -12,6 +13,7 @@ export interface CatalogRecord extends SourceMeta {
   emoji: string;
   description?: string;
   tags?: string[];
+  spoilerTier?: SpoilerTier;
 }
 
 export interface Crop extends CatalogRecord {
@@ -71,4 +73,21 @@ export interface CalendarEntry extends CatalogRecord {
   day: number;
   kind: 'festival' | 'event' | 'tv';
   year?: number;
+}
+
+export interface FarmDate {
+  season: Season;
+  day: number;
+  year: number;
+}
+
+export interface FarmReminder {
+  id: string;
+  timing: 'today' | 'tomorrow' | 'upcoming';
+  category: 'birthday' | 'festival' | 'tv' | 'cart' | 'season' | 'crop';
+  emoji: string;
+  title: string;
+  detail: string;
+  date: FarmDate;
+  link?: string;
 }

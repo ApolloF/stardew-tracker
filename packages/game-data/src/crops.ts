@@ -48,10 +48,10 @@ export const CROPS: Crop[] = [
   crop('powdermelon','Powdermelon','❄️',['Winter'],7,null,null,60,'Artifact spots, seed spots, prize tickets',{giant:true}),
   crop('ancient-fruit','Ancient Fruit','🔵',['Spring','Summer','Fall'],28,7,null,550,'Ancient Seeds'),
   crop('cactus-fruit','Cactus Fruit','🌵',['Spring','Summer','Fall','Winter'],12,3,150,75,'Oasis; indoors only'),
-  crop('pineapple','Pineapple','🍍',['Summer'],14,7,null,300,'Island Trader; grows year-round on Ginger Island'),
-  crop('qi-fruit','Qi Fruit','💙',['Spring','Summer','Fall','Winter'],4,null,null,1,"Qi's Crop quest",{giant:true}),
+  crop('pineapple','Pineapple','🍍',['Summer'],14,7,null,300,'Island Trader; grows year-round on Ginger Island',{spoilerTier:'late-game'}),
+  crop('qi-fruit','Qi Fruit','💙',['Spring','Summer','Fall','Winter'],4,null,null,1,"Qi's Crop quest",{giant:true,spoilerTier:'late-game'}),
   crop('sweet-gem-berry','Sweet Gem Berry','💎',['Fall'],24,null,1000,3000,'Rare Seed from Traveling Cart'),
-  crop('taro-root','Taro Root','🫚',['Summer'],10,null,null,100,'Island Trader; 7 days near water'),
+  crop('taro-root','Taro Root','🫚',['Summer'],10,null,null,100,'Island Trader; 7 days near water',{spoilerTier:'late-game'}),
 ];
 
 export const FERTILIZERS = [

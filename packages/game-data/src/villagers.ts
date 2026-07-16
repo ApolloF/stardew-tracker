@@ -2,7 +2,7 @@ import { meta } from './meta.js';
 import type { Season, Villager } from './types.js';
 
 const m = meta('List_of_All_Gifts');
-const v = (id:string,name:string,emoji:string,season:Season,day:number,lovedGifts:string[],marriageCandidate=false):Villager => ({...m,id,name,emoji,birthday:{season,day},lovedGifts,marriageCandidate});
+const v = (id:string,name:string,emoji:string,season:Season,day:number,lovedGifts:string[],marriageCandidate=false):Villager => ({...m,id,name,emoji,birthday:{season,day},lovedGifts,marriageCandidate,spoilerTier:id==='leo'?'late-game':'ordinary'});
 
 export const UNIVERSAL_LOVES = ['Golden Pumpkin','Magic Rock Candy','Pearl','Prismatic Shard','Rabbit’s Foot','Stardrop Tea'];
 export const UNIVERSAL_EXCEPTIONS: Record<string,string[]> = { Haley:['Prismatic Shard'], Penny:['Rabbit’s Foot'] };
