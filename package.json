@@ -1,0 +1,13 @@
+{
+  "name": "stardew-tracker",
+  "private": true,
+  "version": "2.0.0",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "build": "npm run build -w @stardew/game-data && npm run build -w @stardew/backend && npm run build -w @stardew/frontend",
+    "test": "npm run test -w @stardew/game-data && npm run test -w @stardew/backend && npm run test -w @stardew/frontend",
+    "dev": "concurrently \"npm run dev -w @stardew/backend\" \"npm run dev -w @stardew/frontend\""
+  },
+  "devDependencies": { "concurrently": "^9.1.2" },
+  "engines": { "node": ">=20" }
+}
