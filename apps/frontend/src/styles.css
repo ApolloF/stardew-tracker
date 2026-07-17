@@ -34,3 +34,18 @@
   line-height: 1.45;
 }
 .auth-page.tracker-login .primary-button { width: 100%; }
+
+.app-error {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  gap: .4rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: radial-gradient(circle at 28% 15%, #e4f1d4, transparent 26rem), #f3ead4;
+  color: #3d2b1a;
+}
+.app-error span { font-size: 4rem; }
+.app-error h1 { margin: 0; color: #6b4c2a; font-family: Fredoka, Fraunces, serif; }
+.app-error p { margin: 0; color: #82694f; }
+.app-error button { justify-self: center; margin-top: 1rem; padding: .7rem 1.3rem; border: 0; border-radius: 999px; background: #4d7a35; color: #fff; font-weight: 700; }

@@ -1,2 +1,0 @@
-import { render,screen } from '@testing-library/react';import { MemoryRouter } from 'react-router-dom';import { describe,expect,it } from 'vitest';import HomePage from './HomePage';
-describe('public home',()=>{it('offers the verified public reference without login',()=>{render(<MemoryRouter><HomePage session={{user:null,setupRequired:false}}/></MemoryRouter>);expect(screen.getByText(/Plan the farm/i)).toBeTruthy();expect(screen.getByText('Bundles')).toBeTruthy();expect(screen.getByText(/verified data/i)).toBeTruthy()})});

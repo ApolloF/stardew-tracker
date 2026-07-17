@@ -17,7 +17,7 @@ export default function ReferencePageSafe({ session }: { session: Session }) {
   const valid = (domain in CATALOG ? domain : 'crops') as CatalogDomain;
 
   useEffect(() => { setParams(query ? { q: query } : {}, { replace: true }); }, [query]);
-  useEffect(() => { if (session.user) api.farm().then(data => { const out: Record<string, boolean> = {}; for (const item of data.progress) if (item.domain === valid && item.value?.completed) out[item.itemId] = true; setProgress(out); }); }, [valid, session.user]);
+  useEffect(() => { if (session.user) api.farm().then(data => { const out: Record<string, boolean> = {}; for (const item of data.progress) if (item.domain === valid && item.value?.completed) out[item.itemId] = true; setProgress(out); }).catch(() => setSaveState('offline')); }, [valid, session.user]);
   const items = useMemo(() => {
     let rows: any[] = [...CATALOG[valid]].filter(item => revealed || item.spoilerTier !== 'late-game');
     const needle = query.toLowerCase().trim();
