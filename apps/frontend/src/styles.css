@@ -35,6 +35,26 @@
 }
 .auth-page.tracker-login .primary-button { width: 100%; }
 
+/* Cottagecore alignment for the public reference pages */
+:root { --cream: #f7f2e2; --paper: #fffdf7; --line: #e0d3b2; }
+.catalog-card, .panel, .room, .bundle { border-color: #e0d3b2; }
+.catalog-card, .panel { background: #fffdf7; box-shadow: 0 2px 12px rgba(61, 43, 26, .08); }
+.filter-bar input, .filter-bar select { border-color: #d4bc8a; background: #fffdf7; }
+.reference-header h1, .catalog-card h2, .room-title h2 { color: #6b4c2a; font-family: Fredoka, Fraunces, serif; }
+[data-theme="dark"] .site-shell { --cream: #1e1a14; --paper: #252018; --line: #40351f; --ink: #f0e8d0; --muted: #b39472; --sage: #2a4020; --green: #a0d070; --green-2: #a0d070; color: var(--ink); background: var(--cream); }
+[data-theme="dark"] body { background: #15120e; }
+[data-theme="dark"] .site-header { background: rgba(30, 26, 20, .88); }
+[data-theme="dark"] .catalog-card, [data-theme="dark"] .panel, [data-theme="dark"] .auth-card { background: #252018; border-color: #40351f; }
+[data-theme="dark"] .room { background: #2a2318; border-color: #40351f; }
+[data-theme="dark"] .bundle { background: #252018; border-color: #40351f; }
+[data-theme="dark"] .bundle li { border-top-color: #40351f; }
+[data-theme="dark"] .filter-bar { background: #1e1a14; }
+[data-theme="dark"] .filter-bar input, [data-theme="dark"] .filter-bar select { background: #252018; border-color: #574529; color: #f0e8d0; }
+[data-theme="dark"] .reference-header h1, [data-theme="dark"] .catalog-card h2, [data-theme="dark"] .room-title h2 { color: #d4a870; }
+[data-theme="dark"] .catalog-card.complete { background: #0f2010; border-color: #406030; }
+[data-theme="dark"] .round-check { background: #252018; }
+[data-theme="dark"] .focus-list > a, [data-theme="dark"] .event-row, [data-theme="dark"] .goal-form, [data-theme="dark"] .plan-card, [data-theme="dark"] .mini-checklist span, [data-theme="dark"] .message > div { background: #2a2318; }
+
 .app-error {
   min-height: 100vh;
   display: grid;
