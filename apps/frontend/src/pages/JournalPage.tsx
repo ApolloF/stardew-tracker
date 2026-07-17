@@ -14,7 +14,7 @@ import './journal-a11y.css';
 const tabs = [
   ['today', 'today', 'Today'], ['bundles', 'bundle', 'Bundles'], ['crops', 'crop', 'Crops'],
   ['goals', 'goal', 'Goals'], ['villagers', 'heart', 'Villagers'], ['calendar', 'calendar', 'Calendar'],
-  ['reference', 'book', 'Reference'], ['assistant', 'leaf', 'Assistant'],
+  ['fishing', 'fish', 'Fishing'], ['reference', 'book', 'Reference'], ['assistant', 'leaf', 'Assistant'],
 ] as const;
 type TabId = typeof tabs[number][0];
 type FarmData = { farm: { name: string; season: Season; year: number; day: number; version: number }; members: Array<{ id: number; displayName: string; role: string }>; progress: any[] };
@@ -107,6 +107,7 @@ export default function JournalPage({ session, onSessionChange }: { session: Ses
       {active === 'goals' && <GoalsTab goals={goals} reload={load} revealLateGame={revealLateGame} reveal={reveal} />}
       {active === 'villagers' && <VillagersTab farm={farm} revealLateGame={revealLateGame} reveal={reveal} />}
       {active === 'calendar' && <CalendarTab farm={farm} />}
+      {active === 'fishing' && <FishingTab farm={farm} value={progressValue} put={putProgress} isRaining={isRaining} openTab={changeTab} />}
       {active === 'reference' && <ReferenceTab revealLateGame={revealLateGame} reveal={reveal} hide={hide} />}
       {active === 'assistant' && <AssistantTab revealLateGame={revealLateGame} reveal={reveal} />}
     </main>
@@ -180,6 +181,54 @@ function VillagersTab({ farm, revealLateGame, reveal }: { farm: FarmData['farm']
 function CalendarTab({ farm }: { farm: FarmData['farm'] }) {
   const [year, setYear] = useState(farm.year % 2 === 0 ? 2 : 1); const events = FESTIVALS.filter(event => event.season === farm.season).sort((a, b) => a.day - b.day); const recipes = QUEEN_OF_SAUCE.filter(entry => entry.year === year);
   return <><Intro title="Valley calendar" text="Festivals, weekly visits, birthdays, and the complete two-year Queen of Sauce rotation." /><section className="calendar-section"><h2>{seasonEmoji(farm.season)} {farm.season} events</h2><div className="calendar-rows">{events.map(event => <article className={event.day === farm.day ? 'today' : ''} key={event.id}><b>{event.day}</b><span>{event.emoji}</span><div><strong>{event.name}</strong><small>{event.day === farm.day ? 'Today' : event.day > farm.day ? `In ${event.day - farm.day} days` : 'Earlier this season'}</small></div></article>)}</div></section><section className="calendar-section"><div className="section-heading"><div><small>Every Sunday</small><h1>📺 Queen of Sauce</h1></div><div className="segmented"><button className={year === 1 ? 'active' : ''} onClick={() => setYear(1)}>Year 1</button><button className={year === 2 ? 'active' : ''} onClick={() => setYear(2)}>Year 2</button></div></div><div className="recipe-grid">{recipes.map(recipe => <article className={recipe.season === farm.season && recipe.day === farm.day && ((farm.year - 1) % 2) + 1 === year ? 'today' : ''} key={recipe.id}><span>{recipe.season.slice(0, 3)} {recipe.day}</span><strong>{recipe.name}</strong></article>)}</div><p className="gentle-note">New recipes air on Sundays. Wednesday reruns can help you catch recipes you missed.</p></section></>;
+}
+
+function FishingTab({ farm, value, put, isRaining, openTab }: { farm: FarmData['farm']; value: (domain: string, id: string) => any; put: (scope: 'shared' | 'player', domain: string, id: string, value: object) => void; isRaining: boolean; openTab: (tab: TabId) => void }) {
+  const [season, setSeason] = useState('Current');
+  const [weather, setWeather] = useState('Any');
+  const [location, setLocation] = useState('All');
+  const locations = useMemo(() => [...new Set(FISH.flatMap(fish => fish.locations))].sort(), []);
+  const caught = (id: string) => value('fish', id)?.completed === true;
+  const caughtCount = FISH.filter(fish => caught(fish.id)).length;
+  const inSeason = (fish: typeof FISH[number], target: string) => (fish.seasons as readonly string[]).some(entry => entry === 'All' || entry === target);
+  const weatherNow = isRaining ? 'Rain' : 'Sunny';
+  const catchable = FISH.filter(fish => inSeason(fish, farm.season));
+  const rightNow = catchable.filter(fish => fish.weather === 'Any' || fish.weather === weatherNow);
+  const otherWeather = catchable.filter(fish => !(fish.weather === 'Any' || fish.weather === weatherNow));
+  const filtered = FISH
+    .filter(fish => season === 'All' || inSeason(fish, season === 'Current' ? farm.season : season))
+    .filter(fish => weather === 'Any' || fish.weather === weather || fish.weather === 'Any')
+    .filter(fish => location === 'All' || fish.locations.includes(location));
+  const card = (fish: typeof FISH[number]) => {
+    const done = caught(fish.id);
+    return <article className={`fish-card ${done ? 'caught' : ''}`} key={fish.id}>
+      <header>
+        <button className="fish-check" onClick={() => put('shared', 'fish', fish.id, { completed: !done })} aria-label={`Mark ${fish.name} ${done ? 'not caught' : 'caught'}`}>{done ? '✅' : '⬜'}</button>
+        <span>{fish.emoji}</span>
+        <div><strong>{fish.name}</strong><small>{fish.seasons.join(' · ')}</small></div>
+        {fish.weather !== 'Any' && <b className={`weather-chip ${fish.weather.toLowerCase()}`}>{fish.weather === 'Rain' ? '🌧️ Rain' : '☀️ Sun'}</b>}
+      </header>
+      <p>{fish.locations.join(', ')} · {fish.time}</p>
+      {fish.bundle && <button className="bundle-chip" onClick={() => openTab('bundles')}>🎁 {fish.bundle.replaceAll('-', ' ')} bundle</button>}
+    </article>;
+  };
+  return <>
+    <Intro title="Fishing guide" text={`Every catch verified for 1.6.15. Checking a fish here also updates the public fishing reference.`} />
+    <section className="journal-card fishing-progress"><div className="section-heading"><div><small>Collection</small><h1>🎣 {caughtCount} of {FISH.length} fish caught</h1></div></div><div className="season-progress"><i style={{ width: `${caughtCount / FISH.length * 100}%` }} /></div></section>
+    <section className="journal-card full"><div className="section-heading"><div><small>{farm.season}, {isRaining ? 'rainy' : 'clear skies'}</small><h1>Catchable today</h1></div></div>
+      <div className="fish-grid">{rightNow.map(card)}</div>
+      {otherWeather.length > 0 && <><h2 className="fish-subheading">Waiting for {isRaining ? 'sun' : 'rain'}</h2><div className="fish-grid dimmed">{otherWeather.map(card)}</div></>}
+    </section>
+    <section className="journal-card full"><div className="section-heading"><div><small>All {FISH.length} fish</small><h1>Full catalog</h1></div></div>
+      <div className="planner-controls fish-filters">
+        <label>Season<select value={season} onChange={event => setSeason(event.target.value)}><option value="Current">Current ({farm.season})</option><option value="All">All seasons</option>{['Spring', 'Summer', 'Fall', 'Winter'].map(entry => <option key={entry}>{entry}</option>)}</select></label>
+        <label>Weather<select value={weather} onChange={event => setWeather(event.target.value)}><option>Any</option><option>Sunny</option><option>Rain</option></select></label>
+        <label>Location<select value={location} onChange={event => setLocation(event.target.value)}><option>All</option>{locations.map(entry => <option key={entry}>{entry}</option>)}</select></label>
+      </div>
+      <div className="fish-grid">{filtered.map(card)}</div>
+      {!filtered.length && <div className="empty-state"><span>🎣</span><h3>No fish match those filters</h3><p>Try widening the season or weather filter.</p></div>}
+    </section>
+  </>;
 }
 
 function ReferenceTab({ revealLateGame, reveal, hide }: { revealLateGame: boolean; reveal: () => void; hide: () => void }) {

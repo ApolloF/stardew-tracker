@@ -39,6 +39,26 @@ describe('compact journal', () => {
     await waitFor(() => expect(screen.getByText('100g · 100 Stone · 10 Clay · 5 Copper Bar')).toBeTruthy());
   });
 
+  it('lists seasonal catches and tracks caught fish on the fishing tab', async () => {
+    vi.mocked(api.putProgress).mockResolvedValue(undefined as any);
+    render(<MemoryRouter initialEntries={['/dashboard?tab=fishing']}><JournalPage session={session} onSessionChange={() => undefined} /></MemoryRouter>);
+    await screen.findByText('Fishing guide');
+    expect(screen.getByText(/0 of \d+ fish caught/)).toBeTruthy();
+    // Spring + clear skies: Sunfish (Sunny) is catchable, Catfish (Rain) waits for rain.
+    expect(screen.getByText('Waiting for rain')).toBeTruthy();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Mark Anchovy caught' })[0]);
+    await waitFor(() => expect(api.putProgress).toHaveBeenCalledWith('shared', 'fish', 'anchovy', { completed: true }));
+    expect(screen.getByText(/1 of \d+ fish caught/)).toBeTruthy();
+  });
+
+  it('narrows the fishing catalog with the season filter', async () => {
+    render(<MemoryRouter initialEntries={['/dashboard?tab=fishing']}><JournalPage session={session} onSessionChange={() => undefined} /></MemoryRouter>);
+    await screen.findByText('Fishing guide');
+    expect(screen.queryByText('Squid')).toBeNull();
+    fireEvent.change(screen.getByLabelText(/^Season/), { target: { value: 'Winter' } });
+    expect(screen.getByText('Squid')).toBeTruthy();
+  });
+
   it('shows a confirmation instead of late-game content by default', async () => {
     render(<MemoryRouter initialEntries={['/dashboard?tab=reference']}><JournalPage session={session} onSessionChange={() => undefined} /></MemoryRouter>);
     expect(await screen.findByText('Late-game details are tucked away')).toBeTruthy();
