@@ -14,7 +14,7 @@ import './journal-a11y.css';
 const tabs = [
   ['today', '🌅', 'Today'], ['bundles', '🎁', 'Bundles'], ['crops', '🌱', 'Crops'],
   ['goals', '📌', 'Goals'], ['villagers', '💖', 'Villagers'], ['calendar', '📅', 'Calendar'],
-  ['fishing', '🎣', 'Fishing'], ['reference', '📖', 'Reference'], ['assistant', '🌿', 'Assistant'],
+  ['fishing', '🎣', 'Fishing'], ['reference', '📖', 'Reference'], ['assistant', '🔮', 'Oracle'],
 ] as const;
 type TabId = typeof tabs[number][0];
 type FarmData = { farm: { name: string; season: Season; year: number; day: number; version: number }; members: Array<{ id: number; displayName: string; role: string }>; progress: any[] };
@@ -226,13 +226,13 @@ function ReferenceTab({ revealLateGame, reveal, hide }: { revealLateGame: boolea
 }
 
 function AssistantTab({ revealLateGame, reveal }: { revealLateGame: boolean; reveal: () => void }) {
-  const [plan, setPlan] = useState<any>(null); const [loading, setLoading] = useState(true); const [planError, setPlanError] = useState(false); const [messages, setMessages] = useState<Array<{ role: string; text: string; warning?: boolean }>>([{ role: 'assistant', text: 'Ask about today, a crop deadline, bundle item, gift, fish, or building. I will warn before answering late-game questions.' }]); const [busy, setBusy] = useState(false); const end = useRef<HTMLDivElement>(null);
+  const [plan, setPlan] = useState<any>(null); const [loading, setLoading] = useState(true); const [planError, setPlanError] = useState(false); const [messages, setMessages] = useState<Array<{ role: string; text: string; warning?: boolean }>>([{ role: 'assistant', text: 'Well met, farmer. Ask me of a crop deadline, a bundle, a loved gift, the fish that bite today, or a building you dream of raising — and the valley will answer. I will keep late-game secrets veiled until you choose to see them.' }]); const [busy, setBusy] = useState(false); const end = useRef<HTMLDivElement>(null);
   const refresh = () => { setLoading(true); setPlanError(false); api.dailyPlan().then(setPlan).catch(() => setPlanError(true)).finally(() => setLoading(false)); };
   useEffect(refresh, []);
   // scrollIntoView returns a Promise in newer Chromium; don't let the effect return it.
   useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const form = event.currentTarget; const question = new FormData(form).get('question')?.toString().trim(); if (!question || busy) return; setMessages(rows => [...rows, { role: 'user', text: question }]); form.reset(); setBusy(true); try { const answer = await api.chat(question); setMessages(rows => [...rows, { role: 'assistant', text: answer.answer, warning: answer.requiresSpoilerConfirmation }]); } catch (error: any) { setMessages(rows => [...rows, { role: 'assistant', text: `I couldn't answer that: ${error.message}` }]); } finally { setBusy(false); } };
-  return <><Intro title="Farm assistant" text="Advice uses your farm date and the verified local catalog. Late-game records stay out of prompts until you reveal them." /><div className="assistant-grid"><section className="daily-plan"><div className="section-heading"><div><small>Progress-aware</small><h1>Daily plan</h1></div><button onClick={refresh}>↻ Refresh</button></div>{loading ? <div className="skeleton-stack" aria-label="Loading daily plan"><i /><i /><i /></div> : planError ? <div className="plan-error"><p>The daily plan couldn't be fetched.</p><button onClick={refresh}>Try again</button></div> : <><p>{plan?.summary}</p>{plan?.cards?.map((card: any, index: number) => <article key={index}><b>{index + 1}</b><div><strong>{card.title}</strong><small>{card.reason}</small></div></article>)}</>}</section><section className="journal-chat"><div className="chat-log" aria-live="polite">{messages.map((message, index) => <div className={`chat-message ${message.role} ${message.warning ? 'warning' : ''}`} key={index}><b>{message.role === 'assistant' ? '🌿' : 'You'}</b><p>{message.text}</p>{message.warning && !revealLateGame && <button onClick={reveal}>Review spoiler warning</button>}</div>)}{busy && <div className="chat-message assistant"><b>🌿</b><p>Thinking…</p></div>}<div ref={end} /></div><form onSubmit={submit}><input name="question" maxLength={1000} placeholder="What should we focus on today?" aria-label="Ask a Stardew question" /><button disabled={busy}>Ask</button></form></section></div><p className="privacy-copy">When Gemini is configured, your question and a compact, identity-free progress summary are sent to Google. Chat history is not stored.</p></>;
+  return <><Intro title="Valley oracle" text="The oracle reads your farm date and the verified local catalog. Late-game lore stays veiled until you reveal it." /><div className="assistant-grid"><section className="daily-plan"><div className="section-heading"><div><small>Progress-aware</small><h1>Daily plan</h1></div><button onClick={refresh}>↻ Refresh</button></div>{loading ? <div className="skeleton-stack" aria-label="Loading daily plan"><i /><i /><i /></div> : planError ? <div className="plan-error"><p>The daily plan couldn't be fetched.</p><button onClick={refresh}>Try again</button></div> : <><p>{plan?.summary}</p>{plan?.cards?.map((card: any, index: number) => <article key={index}><b>{index + 1}</b><div><strong>{card.title}</strong><small>{card.reason}</small></div></article>)}</>}</section><section className="journal-chat"><div className="chat-log" aria-live="polite">{messages.map((message, index) => <div className={`chat-message ${message.role} ${message.warning ? 'warning' : ''}`} key={index}><b>{message.role === 'assistant' ? '🔮' : 'You'}</b><p>{message.role === 'assistant' ? <Typewriter text={message.text} onType={() => end.current?.scrollIntoView({ block: 'end' })} /> : message.text}</p>{message.warning && !revealLateGame && <button onClick={reveal}>Review spoiler warning</button>}</div>)}{busy && <div className="chat-message assistant"><b>🔮</b><p className="oracle-gazing">The oracle gazes into the mists…</p></div>}<div ref={end} /></div><form onSubmit={submit}><input name="question" maxLength={1000} placeholder="Ask the oracle…" aria-label="Ask the valley oracle a Stardew question" /><button disabled={busy}>Ask</button></form></section></div><p className="privacy-copy">When Gemini is configured, your question and a compact, identity-free progress summary are sent to Google. Chat history is not stored.</p></>;
 }
 
 function SpoilerGate({ reveal }: { reveal: () => void }) {
@@ -245,6 +245,17 @@ function InviteModal({ close, done }: { close: () => void; done: () => void }) {
 
 function Intro({ title, text }: { title: string; text: string }) { return <header className="tab-intro"><h1>{title}</h1><p>{text}</p></header>; }
 function EmptyState({ emoji, text }: { emoji: string; text: string }) { return <div className="empty-state"><span>{emoji}</span><p>{text}</p></div>; }
+function Typewriter({ text, onType }: { text: string; onType?: () => void }) {
+  const reduced = useMemo(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false, []);
+  const [count, setCount] = useState(reduced ? text.length : 0);
+  useEffect(() => {
+    if (reduced) { setCount(text.length); return; }
+    setCount(0); let i = 0;
+    const id = window.setInterval(() => { i += 1; setCount(i); onType?.(); if (i >= text.length) window.clearInterval(id); }, 18);
+    return () => window.clearInterval(id);
+  }, [text, reduced]);
+  return <span className="typewriter" aria-label={text}>{text.slice(0, count)}{count < text.length && <b className="tw-caret" aria-hidden="true" />}</span>;
+}
 function seasonEmoji(season: Season) { return ({ Spring: '🌸', Summer: '☀️', Fall: '🍂', Winter: '❄️' } as const)[season]; }
 function saveLabel(state: SaveState) { return ({ idle: '✅ Saved', saved: '✅ Saved', saving: '💾 Saving…', retrying: '↻ Refetching after a conflict…', offline: '⚠ Offline — changes not saved', failed: '⚠ Save failed' } as const)[state]; }
 function formatProjectRequirements(project: Project) { return [...(project.cost ? [`${project.cost.toLocaleString()}g`] : []), ...Object.entries(project.materials).map(([name, count]) => `${count} ${name}`)].join(' · ') || 'No material cost'; }

@@ -29,9 +29,10 @@
   color: var(--text);
   background: var(--parchment);
   box-shadow: 0 0 60px rgba(75, 55, 27, .1);
-  font-family: Nunito, 'DM Sans', sans-serif;
-  font-size: .92rem;
-  line-height: 1.5;
+  font-family: 'Pixelify Sans', Nunito, sans-serif;
+  font-size: .95rem;
+  line-height: 1.55;
+  letter-spacing: .2px;
 }
 
 [data-theme="dark"] .journal-app {
@@ -66,8 +67,8 @@ body:has(.journal-app) {
 }
 .journal-app button, .journal-app input, .journal-app select { font: inherit; }
 .journal-app button { color: inherit; cursor: pointer; }
-.journal-app h1, .journal-app h2, .journal-app strong, .journal-app .farm-title { font-family: Fredoka, Fraunces, serif; }
-.journal-loading { min-height: 100vh; display: grid; place-content: center; gap: 6px; text-align: center; color: #4d7a35; font-family: Fredoka, sans-serif; }
+.journal-app h1, .journal-app h2, .journal-app strong, .journal-app .farm-title { font-family: 'Pixelify Sans', Fraunces, serif; }
+.journal-loading { min-height: 100vh; display: grid; place-content: center; gap: 6px; text-align: center; color: #4d7a35; font-family: 'Pixelify Sans', sans-serif; }
 .journal-loading span { font-size: 4rem; animation: journal-bounce .8s ease-in-out infinite alternate; }
 .journal-loading .journal-primary { justify-self: center; }
 
@@ -80,8 +81,8 @@ body:has(.journal-app) {
 .farm-title button { border: 0; background: none; font-weight: 600; padding: 2px 6px; border-radius: var(--radius-sm); transition: color .2s, background .2s; }
 .farm-title button:hover { color: var(--sage-dark); background: var(--parchment-2); }
 .farm-title small { opacity: .6; font-size: .85rem; }
-.farm-name-input { width: 210px; padding: 4px 8px; color: var(--brown); background: var(--parchment); border: 2px solid var(--sage); border-radius: var(--radius-sm); font-family: Fredoka, sans-serif; font-size: 1.15rem; font-weight: 600; outline: none; }
-.season-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 14px; border-radius: 99px; color: white; font-family: Fredoka, sans-serif; font-size: .92rem; font-weight: 600; text-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
+.farm-name-input { width: 210px; padding: 4px 8px; color: var(--brown); background: var(--parchment); border: 2px solid var(--sage); border-radius: var(--radius-sm); font-family: 'Pixelify Sans', sans-serif; font-size: 1.15rem; font-weight: 600; outline: none; }
+.season-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 14px; border-radius: 99px; color: white; font-family: 'Pixelify Sans', sans-serif; font-size: .92rem; font-weight: 600; text-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
 .season-spring { background: #78a954; } .season-summer { background: #d99b20; } .season-fall { background: #c56627; } .season-winter { background: #6e9fc7; }
 .round-action { width: 36px; height: 36px; display: grid; place-items: center; border: 1.5px solid var(--border); border-radius: 50%; background: var(--parchment-2); transition: background .2s, transform .2s; }
 .round-action:hover { transform: scale(1.1); background: var(--parchment-3); }
@@ -89,7 +90,7 @@ body:has(.journal-app) {
 .date-controls > button { width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; font-size: 1.4rem; color: var(--muted); transition: background .15s, color .15s; }
 .date-controls > button:hover { background: var(--parchment-2); color: var(--brown); }
 .date-track { flex: 1; position: relative; }
-.date-track strong { font-family: Fredoka, sans-serif; font-size: .95rem; }
+.date-track strong { font-family: 'Pixelify Sans', sans-serif; font-size: .95rem; }
 .date-track span { font-size: .78rem; color: var(--muted); }
 .season-progress { height: 10px; overflow: hidden; background: var(--parchment-2); border: 1px solid var(--border); border-radius: 99px; }
 .season-progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--sage), #9dc76f); border-radius: inherit; transition: width .4s ease; }
@@ -114,7 +115,7 @@ body:has(.journal-app) {
 
 /* ── Tabs ─────────────────────────────────────────────── */
 .journal-tabs { position: sticky; top: 112px; z-index: 30; display: flex; gap: 2px; overflow-x: auto; padding: 12px 12px 0; border-bottom: 2px solid var(--border-light); background: var(--surface); scrollbar-width: thin; scroll-snap-type: x proximity; }
-.journal-tabs button { flex: 0 0 auto; display: flex; align-items: center; gap: 5px; padding: 8px 8px 10px; border: 2px solid transparent; border-bottom: 0; border-radius: var(--radius-sm) var(--radius-sm) 0 0; background: none; color: var(--muted); font-family: Fredoka, sans-serif; font-size: .88rem; font-weight: 500; white-space: nowrap; scroll-snap-align: start; transition: all .15s; }
+.journal-tabs button { flex: 0 0 auto; display: flex; align-items: center; gap: 5px; padding: 8px 8px 10px; border: 2px solid transparent; border-bottom: 0; border-radius: var(--radius-sm) var(--radius-sm) 0 0; background: none; color: var(--muted); font-family: 'Pixelify Sans', sans-serif; font-size: .88rem; font-weight: 500; white-space: nowrap; scroll-snap-align: start; transition: all .15s; }
 .journal-tabs button:hover { color: var(--brown); background: var(--parchment-2); }
 .journal-tabs button.active { position: relative; bottom: -2px; color: var(--brown); background: var(--parchment); border-color: var(--border-light); }
 
@@ -142,7 +143,7 @@ body:has(.journal-app) {
 .empty-note { margin: 10px 0; color: var(--muted); font-size: .85rem; line-height: 1.5; }
 
 /* ── Today: hints ─────────────────────────────────────── */
-.weather-toggle { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 99px; background: var(--parchment); color: var(--muted); font: 700 .8rem Nunito, sans-serif; cursor: pointer; white-space: nowrap; }
+.weather-toggle { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 99px; background: var(--parchment); color: var(--muted); font: 600 .82rem 'Pixelify Sans', sans-serif; cursor: pointer; white-space: nowrap; }
 .weather-toggle input { accent-color: var(--sage); }
 .hint-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 10px; margin-top: 12px; }
 .hint-summary article { display: grid; grid-template-columns: auto 1fr auto; align-items: start; gap: 10px; padding: 12px; border: 1px solid var(--border-light); border-left: 4px solid var(--sage); border-radius: var(--radius-sm); background: var(--parchment); transition: transform .15s, box-shadow .15s; }
@@ -150,7 +151,7 @@ body:has(.journal-app) {
 .hint-summary article.urgent { border-left-color: var(--berry); }
 .hint-summary article > .emoji-icon { font-size: 1.35rem; }
 .hint-summary article strong, .hint-summary article small { display: block; }
-.hint-summary article strong { font: 600 .92rem Fredoka, sans-serif; }
+.hint-summary article strong { font: 600 .92rem 'Pixelify Sans', sans-serif; }
 .hint-summary article small { margin-top: 2px; color: var(--muted); font-size: .78rem; line-height: 1.4; }
 .hint-summary article b { color: var(--sage-dark); font-size: .76rem; white-space: nowrap; }
 
@@ -247,7 +248,7 @@ body:has(.journal-app) {
 .villager-grid header > div { display: grid; }
 .villager-grid strong { font-size: .95rem; }
 .villager-grid small { color: var(--muted); font-size: .74rem; }
-.villager-grid header b { margin-left: auto; padding: 3px 10px; border-radius: 99px; background: var(--parchment-2); border: 1px solid var(--border); color: var(--sage-dark); font-family: Fredoka, sans-serif; font-size: .74rem; }
+.villager-grid header b { margin-left: auto; padding: 3px 10px; border-radius: 99px; background: var(--parchment-2); border: 1px solid var(--border); color: var(--sage-dark); font-family: 'Pixelify Sans', sans-serif; font-size: .74rem; }
 .villager-grid article.birthday-today header b { background: var(--pink); border-color: #a03060; color: white; }
 .villager-grid article > p { margin: 9px 0 5px; color: var(--muted); font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
 .gift-chips { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -261,7 +262,7 @@ body:has(.journal-app) {
 .calendar-rows article { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: var(--radius-sm); background: var(--parchment); }
 .calendar-rows article.today, .recipe-grid article.today { outline: 2px solid #d59e32; background: #fff4d1; color: #523913; }
 [data-theme="dark"] .calendar-rows article.today, [data-theme="dark"] .recipe-grid article.today { background: #3a2a00; color: #f0d090; }
-.calendar-rows article > b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--surface); color: var(--brown); font-family: Fredoka, sans-serif; }
+.calendar-rows article > b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--surface); color: var(--brown); font-family: 'Pixelify Sans', sans-serif; }
 .calendar-rows article > span { font-size: 1.3rem; }
 .calendar-rows article > div { display: grid; }
 .calendar-rows strong { font-size: .82rem; }
@@ -302,7 +303,7 @@ body:has(.journal-app) {
 .fish-filters { flex-wrap: wrap; }
 .empty-state { padding: 28px; text-align: center; }
 .empty-state > span { font-size: 3rem; }
-.empty-state h3 { margin: 8px 0 2px; color: var(--brown); font-family: Fredoka, sans-serif; }
+.empty-state h3 { margin: 8px 0 2px; color: var(--brown); font-family: 'Pixelify Sans', sans-serif; }
 .empty-state p { margin: 0; color: var(--muted); font-size: .85rem; }
 
 /* ── Reference ────────────────────────────────────────── */
@@ -371,6 +372,11 @@ body:has(.journal-app) {
 .form-error { margin: 0; padding: 8px; border-radius: var(--radius-sm); background: #fee2dd; color: #8f2c25; font-size: .8rem; }
 [data-theme="dark"] .form-error { background: #3a0a0a; color: #e08080; }
 
+.typewriter { white-space: pre-wrap; }
+.oracle-gazing { font-style: italic; animation: oracle-pulse 1.4s ease-in-out infinite; }
+@keyframes oracle-pulse { 50% { opacity: .5; } }
+.tw-caret { display: inline-block; width: .18em; height: 1.05em; margin-left: 2px; background: currentColor; vertical-align: -2px; animation: tw-blink .9s steps(1) infinite; }
+@keyframes tw-blink { 50% { opacity: 0; } }
 @keyframes journal-bounce { to { transform: translateY(-8px); } }
 @keyframes journal-shimmer { to { background-position: -200% 0; } }
 
