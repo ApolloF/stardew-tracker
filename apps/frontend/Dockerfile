@@ -4,6 +4,7 @@ COPY packages/game-data/package.json packages/game-data/tsconfig.json ./packages
 COPY packages/game-data/src ./packages/game-data/src
 RUN npm install --prefix packages/game-data && npm run build --prefix packages/game-data
 COPY apps/frontend/package.json apps/frontend/tsconfig.json apps/frontend/vite.config.ts apps/frontend/index.html ./apps/frontend/
+COPY apps/frontend/public ./apps/frontend/public
 COPY apps/frontend/src ./apps/frontend/src
 RUN npm install --prefix apps/frontend && npm run build --prefix apps/frontend
 FROM nginx:1.27-alpine
