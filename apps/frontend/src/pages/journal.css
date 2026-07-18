@@ -114,10 +114,11 @@ body:has(.journal-app) {
 .briefing p { margin: 2px 0; color: var(--muted); font-size: .8rem; }
 
 /* ── Tabs ─────────────────────────────────────────────── */
-.journal-tabs { position: sticky; top: 112px; z-index: 30; display: flex; gap: 2px; overflow-x: auto; padding: 12px 12px 0; border-bottom: 2px solid var(--border-light); background: var(--surface); scrollbar-width: thin; scroll-snap-type: x proximity; }
-.journal-tabs button { flex: 0 0 auto; display: flex; align-items: center; gap: 5px; padding: 8px 8px 10px; border: 2px solid transparent; border-bottom: 0; border-radius: var(--radius-sm) var(--radius-sm) 0 0; background: none; color: var(--muted); font-family: 'Pixelify Sans', sans-serif; font-size: .88rem; font-weight: 500; white-space: nowrap; scroll-snap-align: start; transition: all .15s; }
-.journal-tabs button:hover { color: var(--brown); background: var(--parchment-2); }
-.journal-tabs button.active { position: relative; bottom: -2px; color: var(--brown); background: var(--parchment); border-color: var(--border-light); }
+.journal-tabs { position: sticky; top: 112px; z-index: 30; display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 14px; border-bottom: 2px solid var(--border-light); background: var(--surface); }
+.journal-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border: 1.5px solid var(--border-light); border-radius: 99px; background: var(--parchment-2); color: var(--muted); font-family: 'Pixelify Sans', sans-serif; font-size: .88rem; font-weight: 500; white-space: nowrap; transition: transform .12s, background .12s, color .12s, border-color .12s; }
+.journal-tabs button:hover { color: var(--brown); background: var(--parchment-3); transform: translateY(-1px); }
+.journal-tabs button.active { color: white; background: var(--sage-dark); border-color: var(--sage-dark); }
+[data-theme="dark"] .journal-tabs button.active { color: #15120e; }
 
 /* ── Content shell ────────────────────────────────────── */
 .journal-content { min-height: 520px; padding: 20px 20px 44px; }
@@ -372,6 +373,19 @@ body:has(.journal-app) {
 .form-error { margin: 0; padding: 8px; border-radius: var(--radius-sm); background: #fee2dd; color: #8f2c25; font-size: .8rem; }
 [data-theme="dark"] .form-error { background: #3a0a0a; color: #e08080; }
 
+/* Beat the dead .daily-plan/.skeleton rules left in styles.css so dark mode is correct */
+.journal-app .daily-plan { background: var(--surface); border: 1.5px solid var(--border-light); border-radius: var(--radius); padding: 15px 16px; }
+.journal-app .skeleton-stack i { height: 56px; border-radius: var(--radius-sm); background: linear-gradient(90deg, var(--parchment-2), var(--parchment-3), var(--parchment-2)); background-size: 200%; animation: journal-shimmer 1.2s infinite; }
+.concise-toggle { display: flex; align-items: center; gap: 7px; padding: 9px 12px; border-top: 1px solid var(--border-light); color: var(--muted); font-size: .82rem; cursor: pointer; }
+.concise-toggle input { accent-color: var(--sage); }
+.heart-track { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 9px 0 4px; padding: 6px 6px 6px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-sm); background: var(--parchment); }
+.heart-track > span { color: var(--muted); font-size: .72rem; font-weight: 700; }
+.heart-stepper { display: flex; align-items: center; gap: 6px; }
+.heart-stepper button { width: 24px; height: 24px; display: grid; place-items: center; border: 1.5px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--brown); font-size: 1rem; line-height: 1; }
+.heart-stepper button:hover:not(:disabled) { background: var(--parchment-3); }
+.heart-stepper button:disabled { opacity: .4; cursor: default; }
+.heart-stepper > b { min-width: 42px; text-align: center; font-size: .82rem; color: var(--sage-dark); }
+.heart-stepper em { font-style: normal; }
 .typewriter { white-space: pre-wrap; }
 .oracle-gazing { font-style: italic; animation: oracle-pulse 1.4s ease-in-out infinite; }
 @keyframes oracle-pulse { 50% { opacity: .5; } }
