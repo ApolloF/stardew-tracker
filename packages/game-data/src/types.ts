@@ -13,6 +13,7 @@ export interface CatalogRecord extends SourceMeta {
   emoji: string;
   gameId?: string;
   iconPath?: string;
+  uiIcon?: string;
   description?: string;
   tags?: string[];
   spoilerTier?: SpoilerTier;
@@ -34,6 +35,7 @@ export interface BundleItem {
   name: string;
   gameId?: string;
   iconPath?: string;
+  uiIcon?: string;
   quantity?: number;
   quality?: 'silver' | 'gold' | 'iridium';
   hint: string;
@@ -90,6 +92,8 @@ export interface FarmReminder {
   timing: 'today' | 'tomorrow' | 'upcoming';
   category: 'birthday' | 'festival' | 'tv' | 'cart' | 'season' | 'crop';
   emoji: string;
+  iconKey?: string;
+  entityId?: string;
   title: string;
   detail: string;
   date: FarmDate;

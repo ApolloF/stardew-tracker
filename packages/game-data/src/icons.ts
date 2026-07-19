@@ -1,4 +1,4 @@
-import { OBJECT_ID_BY_NAME } from './object-icons.generated.js';
+import { OBJECT_ID_BY_NAME,OBJECT_NAME_BY_ID } from './object-icons.generated.js';
 
 const ITEM_OVERRIDES: Record<string, string> = {
   'large-white-egg': '174',
@@ -28,3 +28,5 @@ export function roomSprite(stableId: string) {
     ? { gameId, iconPath: `/game-icons/bundles/${gameId.slice(7)}.webp` }
     : { gameId, iconPath: `/game-icons/objects/${gameId}.webp` };
 }
+
+export function objectName(gameId:string){return OBJECT_NAME_BY_ID[gameId as keyof typeof OBJECT_NAME_BY_ID]||`Item ${gameId}`;}

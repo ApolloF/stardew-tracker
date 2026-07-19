@@ -32,17 +32,17 @@ function remindersForDate(date: FarmDate, timing: FarmReminder['timing'], reveal
   const out: FarmReminder[] = [];
   for (const event of FESTIVALS.filter(entry => entry.season === date.season && entry.day === date.day && (entry.year === undefined || entry.year === date.year))) {
     if (!revealLateGame && event.spoilerTier === 'late-game') continue;
-    out.push({ id: `event:${event.id}:${timing}`, timing, category: 'festival', emoji: event.emoji, title: event.name, detail: `${date.season} ${date.day}`, date, link: '/dashboard?tab=calendar' });
+    out.push({ id: `event:${event.id}:${timing}`, timing, category: 'festival', emoji: event.emoji, iconKey: 'calendar', entityId: event.id, title: event.name, detail: `${date.season} ${date.day}`, date, link: '/dashboard?tab=calendar' });
   }
   for (const villager of VILLAGERS.filter(entry => entry.birthday.season === date.season && entry.birthday.day === date.day)) {
     if (!revealLateGame && villager.spoilerTier === 'late-game') continue;
-    out.push({ id: `birthday:${villager.id}:${timing}`, timing, category: 'birthday', emoji: villager.emoji, title: `${villager.name}'s birthday`, detail: `Loved gifts: ${villager.lovedGifts.slice(0, 3).join(', ')}`, date, link: '/dashboard?tab=villagers' });
+    out.push({ id: `birthday:${villager.id}:${timing}`, timing, category: 'birthday', emoji: villager.emoji, iconKey: 'villager', entityId: villager.id, title: `${villager.name}'s birthday`, detail: `Loved gifts: ${villager.lovedGifts.slice(0, 3).join(', ')}`, date, link: '/dashboard?tab=villagers' });
   }
   const recipe = queenOfSauce(date.season, date.day, date.year);
-  if (recipe && date.day % 7 === 0) out.push({ id: `qos:${recipe.id}`, timing, category: 'tv', emoji: '📺', title: 'Queen of Sauce', detail: `Today's recipe: ${recipe.name}. Watch TV before the day ends.`, date, link: '/dashboard?tab=calendar' });
-  if (isTravelingCartDay(date.day)) out.push({ id: `cart:${farmDateIndex(date)}`, timing, category: 'cart', emoji: '🛒', title: 'Traveling Cart', detail: 'The cart is visiting the forest today.', date });
+  if (recipe && date.day % 7 === 0) out.push({ id: `qos:${recipe.id}`, timing, category: 'tv', iconKey: 'tv', emoji: 'ðŸ“º', title: 'Queen of Sauce', detail: `Today's recipe: ${recipe.name}. Watch TV before the day ends.`, date, link: '/dashboard?tab=calendar' });
+  if (isTravelingCartDay(date.day)) out.push({ id: `cart:${farmDateIndex(date)}`, timing, category: 'cart', iconKey: 'cart', emoji: 'ðŸ›’', title: 'Traveling Cart', detail: 'The cart is visiting the forest today.', date });
   const deadline = CROPS.filter(crop => crop.seasons.includes(date.season) && crop.spoilerTier !== 'late-game' && lastPlantingDay(crop, date.season) === date.day);
-  if (deadline.length) out.push({ id: `crops:${farmDateIndex(date)}`, timing, category: 'crop', emoji: '🌱', title: 'Last planting day', detail: `Without growth bonuses: ${deadline.map(crop => crop.name).join(', ')}.`, date, link: '/dashboard?tab=crops' });
+for (const crop of deadline) out.push({ id: `crop:${crop.id}:${farmDateIndex(date)}`, timing, category: 'crop', iconKey: 'crops', entityId: crop.id, emoji: '', title: `Last day to plant ${crop.name}`, detail: `Without growth bonuses, plant by ${date.season} ${date.day} for at least one harvest.`, date, link: '/dashboard?tab=crops' });
   return out;
 }
 
@@ -50,8 +50,8 @@ export function buildFarmBriefing(date: FarmDate, revealLateGame = false): FarmR
   const tomorrow = addFarmDays(date, 1);
   const out = [...remindersForDate(date, 'today', revealLateGame), ...remindersForDate(tomorrow, 'tomorrow', revealLateGame)];
   if (tomorrow.season !== date.season) {
-    out.push({ id: `season-end:${farmDateIndex(date)}`, timing: 'today', category: 'season', emoji: '⏳', title: `${date.season} ends tonight`, detail: 'Harvest seasonal crops and finish anything that cannot wait.', date });
-    out.push({ id: `season-start:${farmDateIndex(tomorrow)}`, timing: 'tomorrow', category: 'season', emoji: '🌤️', title: `${tomorrow.season} begins`, detail: `Tomorrow is ${tomorrow.season} 1.`, date: tomorrow });
+    out.push({ id: `season-end:${farmDateIndex(date)}`, timing: 'today', category: 'season', iconKey: 'clock', emoji: 'â³', title: `${date.season} ends tonight`, detail: 'Harvest seasonal crops and finish anything that cannot wait.', date });
+    out.push({ id: `season-start:${farmDateIndex(tomorrow)}`, timing: 'tomorrow', category: 'season', iconKey: 'clock', emoji: 'ðŸŒ¤ï¸', title: `${tomorrow.season} begins`, detail: `Tomorrow is ${tomorrow.season} 1.`, date: tomorrow });
   }
   return out;
 }

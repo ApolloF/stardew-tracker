@@ -420,3 +420,7 @@ body:has(.journal-app) {
 @media (prefers-reduced-motion: reduce) {
   .journal-app *, .journal-app *::before, .journal-app *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
+
+/* Grouped journal navigation and vector icon alignment */
+.journal-tab-group{display:grid;gap:3px}.journal-tab-group>small{padding-left:8px;color:var(--muted);font-size:.56rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.journal-tab-group>div{display:flex;flex-wrap:wrap;gap:5px}.ui-icon{display:inline-block;flex:none;vertical-align:middle}.section-heading h1,.calendar-section h2,.farm-title,.weather-chip,.bundle-chip,.daily-plan button{display:flex;align-items:center;gap:7px}.journal-tabs .game-icon{width:22px;height:22px}.joja-projects{display:grid;gap:8px}.joja-projects article{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius-sm);background:var(--parchment)}
+@media(max-width:680px){.journal-tabs{align-items:flex-start}.journal-tab-group>small{font-size:.5rem}.journal-tab-group>div{gap:3px}.journal-tabs button{padding:7px 9px}}

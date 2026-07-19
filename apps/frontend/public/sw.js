@@ -1,5 +1,5 @@
 // Junimo Journal service worker — app-shell offline, never caches /api.
-const VERSION = 'junimo-v3';
+const VERSION = 'junimo-v4';
 const SHELL = `shell-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
 const PRECACHE = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];

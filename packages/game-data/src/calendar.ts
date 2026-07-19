@@ -2,7 +2,7 @@ import { meta } from './meta.js';
 import type { CalendarEntry, Season } from './types.js';
 
 const m = meta('Calendar');
-const event=(id:string,name:string,emoji:string,season:Season,day:number,kind:CalendarEntry['kind']='festival',year?:number):CalendarEntry=>({...m,id,name,emoji,season,day,kind,...(year?{year}:{})});
+const event=(id:string,name:string,emoji:string,season:Season,day:number,kind:CalendarEntry['kind']='festival',year?:number):CalendarEntry=>({...m,id,name,emoji,uiIcon:'calendar',season,day,kind,...(year?{year}:{})});
 export const FESTIVALS:CalendarEntry[]=[
   event('egg-festival','Egg Festival','🥚','Spring',13),event('desert-festival-1','Desert Festival — Day 1','🏜️','Spring',15),event('desert-festival-2','Desert Festival — Day 2','🏜️','Spring',16),event('desert-festival-3','Desert Festival — Day 3','🏜️','Spring',17),event('flower-dance','Flower Dance','💃','Spring',24),
   event('luau','Luau','🍲','Summer',11),event('trout-derby-1','Trout Derby — Day 1','🎣','Summer',20),event('trout-derby-2','Trout Derby — Day 2','🎣','Summer',21),event('moonlight-jellies','Dance of the Moonlight Jellies','🪼','Summer',28),
