@@ -65,3 +65,9 @@ describe('compact journal', () => {
     expect(screen.getByRole('button', { name: 'Show warning' })).toBeTruthy();
   });
 });
+describe('farmer and discovery routes',()=>{
+  afterEach(cleanup);
+  beforeEach(()=>{localStorage.clear();vi.mocked(api.farm).mockResolvedValue({farm:{name:'Test Farm',season:'Spring',day:7,year:1,version:1},members:[{id:1,displayName:'Farmer',role:'owner'}],progress:[]});vi.mocked(api.goals).mockResolvedValue([])});
+  it('mounts the Farmer tracker body',async()=>{render(<MemoryRouter initialEntries={['/dashboard?tab=farmer']}><JournalPage session={session} onSessionChange={()=>undefined}/></MemoryRouter>);expect(await screen.findByRole('heading',{name:'Farmer'})).toBeTruthy();expect(screen.getByText('Lifetime earnings')).toBeTruthy()});
+  it('mounts the Discoveries tracker body',async()=>{render(<MemoryRouter initialEntries={['/dashboard?tab=discoveries']}><JournalPage session={session} onSessionChange={()=>undefined}/></MemoryRouter>);expect(await screen.findByRole('heading',{name:'Discoveries'})).toBeTruthy();expect(screen.getByRole('button',{name:'Secret Notes'})).toBeTruthy()});
+});

@@ -69,6 +69,7 @@ body:has(.journal-app) {
 .journal-app button { color: inherit; cursor: pointer; }
 .journal-app h1, .journal-app h2, .journal-app strong, .journal-app .farm-title { font-family: 'Pixelify Sans', Fraunces, serif; }
 .journal-loading { min-height: 100vh; display: grid; place-content: center; gap: 6px; text-align: center; color: #4d7a35; font-family: 'Pixelify Sans', sans-serif; }
+.journal-loading.inline { min-height: 280px; }
 .journal-loading span { font-size: 4rem; animation: journal-bounce .8s ease-in-out infinite alternate; }
 .journal-loading .journal-primary { justify-self: center; }
 

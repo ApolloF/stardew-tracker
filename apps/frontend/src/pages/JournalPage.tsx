@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   BUNDLE_ROOMS, CROPS, FESTIVALS, FERTILIZERS, FISH, PROJECTS, QUEEN_OF_SAUCE, VILLAGERS,
@@ -10,13 +10,18 @@ import { api, type SaveState, type Session } from '../api';
 import './journal.css';
 import './journal-mobile.css';
 import './journal-a11y.css';
-import SaveImportModal from '../components/SaveImportModal';
 import GameIcon from '../components/GameIcon';
 import UiIcon, { type UiIconName } from '../components/UiIcon';
-import { FarmerTracker, DiscoveriesTracker } from './FarmerDiscoveries';
-import { AnimalsTracker,CollectionsTracker,PerfectionTracker } from './ExpandedTrackers';
 import RelationshipSummary from './RelationshipSummary';
 import './relationship-summary.css';
+
+const SaveImportModal = lazy(() => import('../components/SaveImportModal'));
+const FarmerTracker = lazy(() => import('./FarmerDiscoveries').then(module => ({ default: module.FarmerTracker })));
+const DiscoveriesTracker = lazy(() => import('./FarmerDiscoveries').then(module => ({ default: module.DiscoveriesTracker })));
+const AnimalsTracker = lazy(() => import('./ExpandedTrackers').then(module => ({ default: module.AnimalsTracker })));
+const CollectionsTracker = lazy(() => import('./ExpandedTrackers').then(module => ({ default: module.CollectionsTracker })));
+const PerfectionTracker = lazy(() => import('./ExpandedTrackers').then(module => ({ default: module.PerfectionTracker })));
+const TrackerLoading = () => <div className="journal-loading inline"><GameIcon src="/game-icons/animals/chicken.webp" label="Loading tracker" size={36}/><p>Opening this journal section…</p></div>;
 
 type TabId='today'|'calendar'|'assistant'|'bundles'|'crops'|'goals'|'animals'|'collections'|'fishing'|'villagers'|'farmer'|'discoveries'|'perfection'|'reference';
 type TabDef=readonly [TabId,string,string];
@@ -105,20 +110,22 @@ export default function JournalPage({ session, onSessionChange }: { session: Ses
       {active === 'today' && <TodayTab farm={farm} goals={goals} revealLateGame={revealLateGame} openTab={changeTab} isRaining={isRaining} setRaining={raining => putProgress('shared', 'calendar-weather', weatherItemId, { raining })} />}
       {active === 'bundles' && <BundlesTab value={progressValue} put={putProgress} revealLateGame={revealLateGame} reveal={reveal} />}
       {active === 'crops' && <CropsTab farm={farm} revealLateGame={revealLateGame} reveal={reveal} />}
-      {active === 'collections' && <CollectionsTracker entries={data.progress} ownId={ownId} put={putProgress} />}
+      {active === 'collections' && <Suspense fallback={<TrackerLoading/>}><CollectionsTracker entries={data.progress} ownId={ownId} put={putProgress}/></Suspense>}
       {active === 'goals' && <GoalsTab goals={goals} reload={load} revealLateGame={revealLateGame} reveal={reveal} />}
       {active === 'villagers' && <><RelationshipSummary entries={data.progress} ownId={ownId} /><VillagersTab farm={farm} value={progressValue} put={putProgress} revealLateGame={revealLateGame} reveal={reveal} /></>}
-      {active === 'animals' && <AnimalsTracker entries={data.progress} put={putProgress} />}
+      {active === 'animals' && <Suspense fallback={<TrackerLoading/>}><AnimalsTracker entries={data.progress} put={putProgress}/></Suspense>}
       {active === 'calendar' && <CalendarTab farm={farm} />}
       {active === 'fishing' && <FishingTab farm={farm} value={progressValue} put={putProgress} isRaining={isRaining} openTab={changeTab} />}
-      {active === 'perfection' && <PerfectionTracker entries={data.progress} members={data.members} />}
+      {active === 'farmer' && <Suspense fallback={<TrackerLoading/>}><FarmerTracker entries={data.progress} ownId={ownId} put={putProgress}/></Suspense>}
+      {active === 'discoveries' && <Suspense fallback={<TrackerLoading/>}><DiscoveriesTracker entries={data.progress} ownId={ownId} put={putProgress} revealLateGame={revealLateGame} reveal={reveal}/></Suspense>}
+      {active === 'perfection' && <Suspense fallback={<TrackerLoading/>}><PerfectionTracker entries={data.progress} members={data.members}/></Suspense>}
       {active === 'reference' && <ReferenceTab revealLateGame={revealLateGame} reveal={reveal} hide={hide} />}
       {active === 'assistant' && <AssistantTab revealLateGame={revealLateGame} reveal={reveal} />}
     </main>
 
     <footer className="journal-footer"><span className={`save-state ${save}`}>{saveLabel(save)}</span><span>{data.members.map(member => member.displayName).join(' & ')}</span>{session.user.role === 'owner' && data.members.length < 2 && <button onClick={() => setInviteOpen(true)}>Invite co-farmer</button>}<span className="verified">Verified for Stardew 1.6.15</span></footer>
     {inviteOpen && <InviteModal close={() => setInviteOpen(false)} done={() => { setInviteOpen(false); load(); }} />}
-    {importOpen && <SaveImportModal session={session} members={data.members} farmVersion={farm.version} close={() => setImportOpen(false)} done={() => { setImportOpen(false); load(); }} />}
+    {importOpen && <Suspense fallback={<div className="modal-backdrop"><section className="modal-card import-modal"><TrackerLoading/></section></div>}><SaveImportModal session={session} members={data.members} farmVersion={farm.version} close={() => setImportOpen(false)} done={() => { setImportOpen(false); load(); }}/></Suspense>}
   </div>;
 }
 
