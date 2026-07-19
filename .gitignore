@@ -7,3 +7,4 @@ backend/data/*.backup.*
 backend/data/progress.json.migrated
 playwright-report/
 test-results/
+.playwright-mcp/

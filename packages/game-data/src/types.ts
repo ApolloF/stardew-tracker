@@ -57,6 +57,7 @@ export interface Villager extends CatalogRecord {
   birthday: { season: Season; day: number };
   lovedGifts: string[];
   marriageCandidate?: boolean;
+  minYear?: number;
 }
 
 export interface Fish extends CatalogRecord {
@@ -79,6 +80,7 @@ export interface CalendarEntry extends CatalogRecord {
   day: number;
   kind: 'festival' | 'event' | 'tv';
   year?: number;
+  requiresUnlock?: 'bus';
 }
 
 export interface FarmDate {

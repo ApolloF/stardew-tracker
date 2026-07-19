@@ -10,20 +10,24 @@ import { api, type SaveState, type Session } from '../api';
 import './journal.css';
 import './journal-mobile.css';
 import './journal-a11y.css';
+import './journal-performance.css';
 import GameIcon from '../components/GameIcon';
 import UiIcon, { type UiIconName } from '../components/UiIcon';
 import RelationshipSummary from './RelationshipSummary';
 import './relationship-summary.css';
 
+const FarmManager = lazy(() => import('../components/FarmManager'));
 const SaveImportModal = lazy(() => import('../components/SaveImportModal'));
 const FarmerTracker = lazy(() => import('./FarmerDiscoveries').then(module => ({ default: module.FarmerTracker })));
 const DiscoveriesTracker = lazy(() => import('./FarmerDiscoveries').then(module => ({ default: module.DiscoveriesTracker })));
 const AnimalsTracker = lazy(() => import('./ExpandedTrackers').then(module => ({ default: module.AnimalsTracker })));
-const CollectionsTracker = lazy(() => import('./ExpandedTrackers').then(module => ({ default: module.CollectionsTracker })));
+const CollectionsTracker = lazy(() => import('./CollectionsTracker'));
 const PerfectionTracker = lazy(() => import('./ExpandedTrackers').then(module => ({ default: module.PerfectionTracker })));
+const LateGameTracker = lazy(() => import('./LateGameTracker'));
+const ReferenceTab = lazy(() => import('./JournalReferenceTab'));
 const TrackerLoading = () => <div className="journal-loading inline"><GameIcon src="/game-icons/animals/chicken.webp" label="Loading tracker" size={36}/><p>Opening this journal section…</p></div>;
 
-type TabId='today'|'calendar'|'assistant'|'bundles'|'crops'|'goals'|'animals'|'collections'|'fishing'|'villagers'|'farmer'|'discoveries'|'perfection'|'reference';
+type TabId='today'|'calendar'|'assistant'|'bundles'|'crops'|'goals'|'animals'|'collections'|'fishing'|'villagers'|'farmer'|'discoveries'|'late-game'|'perfection'|'reference';
 type TabDef=readonly [TabId,string,string];
 const tabGroups:ReadonlyArray<readonly [string,readonly TabDef[]]> = [
   ['Journal', [['today','today','Today'],['calendar','calendar','Calendar'],['assistant','oracle','Oracle']]],
@@ -32,10 +36,20 @@ const tabGroups:ReadonlyArray<readonly [string,readonly TabDef[]]> = [
   ['People', [['villagers','heart','Relationships']]],
   ['Farmer', [['farmer','farmer','Farmer']]],
   ['Discoveries', [['discoveries','discoveries','Discoveries']]],
-  ['Progress', [['perfection','perfection','Perfection'],['reference','reference','Reference']]],
+  ['Progress', [['late-game','discoveries','Late game'],['perfection','perfection','Perfection'],['reference','reference','Reference']]],
 ];
 const tabs:readonly TabDef[] = tabGroups.flatMap(group => group[1]);
-type FarmData = { farm: { name: string; season: Season; year: number; day: number; version: number }; members: Array<{ id: number; displayName: string; role: string }>; progress: any[] };
+const domainsForTab:Record<TabId,string[]>={
+  today:['calendar-weather','farmer','unlocks'],calendar:['calendar-weather','farmer','unlocks'],assistant:[],
+  bundles:['bundles'],crops:[],goals:[],animals:['animals'],
+  collections:['museum','shipping','cooking','crafting'],fishing:['fish','calendar-weather'],villagers:['relationships'],
+  farmer:['farmer','skills','stardrops','achievements','powers'],
+  discoveries:['notes','scraps','rarecrows','farmer','skills','museum','fish','shipping','relationships','animals','powers','bundles'],
+  'late-game':['monster-goals','walnuts','island-upgrades','raccoon','scraps'],
+  perfection:['shipping','perfection','monster-goals','relationships','skills','stardrops','cooking','crafting','fish','walnuts'],
+  reference:[],
+};
+type FarmData = { farm: { id:number; name: string; season: Season; year: number; day: number; version: number }; members: Array<{ id: number; displayName: string; role: string }>; settings: { revealLateGame: boolean }; progress: any[] };
 const uiNames = new Set<UiIconName>(['home','today','tomorrow','bundles','crops','goals','collections','heart','calendar','fishing','perfection','reference','oracle','rain','sun','moon','clock','cart','tv','import','logout','search','warning','leaf','refresh','check','save','people','farmer','discoveries','skills','note','fire']);
 function ReminderIcon({item}:{item:FarmReminder}){if(item.iconKey==='villager'&&item.entityId)return <GameIcon src={`/game-icons/villagers/${item.entityId}.png`} label={item.title} size={28}/>;if(item.iconKey==='crops'&&item.entityId){const crop=CROPS.find(row=>row.id===item.entityId);if(crop)return <GameIcon src={crop.iconPath} label={crop.name} size={28}/>;}return <UiIcon name={(item.iconKey&&uiNames.has(item.iconKey as UiIconName)?item.iconKey:'calendar') as UiIconName} label={item.title}/>;}
 function ProjectIcon({goal}:{goal:any}){const project=goal.project||goal.target||goal;return project?.iconPath?<GameIcon src={project.iconPath} label={project.name||goal.title} size={30}/>:<UiIcon name="goals"/>;}
@@ -44,16 +58,25 @@ export default function JournalPage({ session, onSessionChange }: { session: Ses
   const requested = params.get('tab') as TabId | null;
   const active: TabId = tabs.some(([id]) => id === requested) ? requested! : 'today';
   const [data, setData] = useState<FarmData | null>(null);
+  const loadedDomains = useRef(new Set<string>());
   const [goals, setGoals] = useState<any[]>([]);
   const [save, setSave] = useState<SaveState>('idle');
   const [theme, setTheme] = useState(() => localStorage.getItem('journal-theme') || 'light');
   const [editingName, setEditingName] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [farmManagerOpen, setFarmManagerOpen] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
-  const load = () => Promise.all([api.farm(), api.goals()]).then(([farm, nextGoals]) => { setData(farm); setGoals(nextGoals); setLoadError(false); });
-  useEffect(() => { load().catch(() => { setLoadError(true); setSave('failed'); }); }, []);
+  const load = () => { const domains=domainsForTab[active]; return Promise.all([api.farm(),api.goals()]).then(async([farm,nextGoals])=>{const progress=typeof api.progress==='function'&&domains.length?await api.progress(domains,'farm'):(farm.progress||[]);const settings=farm.settings||{revealLateGame:progress.some((entry:any)=>entry.domain==='spoilers'&&entry.itemId==='late-game'&&(entry.value?.revealed||entry.value?.completed))};loadedDomains.current=new Set(domains);setData({...farm,settings,progress});setGoals(nextGoals);setLoadError(false);}); };
+  useEffect(() => { loadedDomains.current.clear(); load().catch(() => { setLoadError(true); setSave('failed'); }); }, [session.user?.farmId]);
+  useEffect(() => {
+    if (!data) return;
+    const missing=domainsForTab[active].filter((domain)=>!loadedDomains.current.has(domain)); if (!missing.length) return;
+    if (typeof api.progress !== 'function') return;
+    for(const domain of missing)loadedDomains.current.add(domain);
+    api.progress(missing,'farm').then((rows)=>setData((current)=>current?{...current,progress:[...current.progress.filter((entry)=>!missing.includes(entry.domain)),...rows]}:current)).catch(()=>{for(const domain of missing)loadedDomains.current.delete(domain);setSave('offline');});
+  }, [active,data?.farm.id]);
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('journal-theme', theme); }, [theme]);
 
   if (!data || !session.user) {
@@ -63,7 +86,7 @@ export default function JournalPage({ session, onSessionChange }: { session: Ses
   const farm = data.farm;
   const ownId = session.user.id;
   const progressValue = (domain: string, itemId: string, player = false) => data.progress.find(entry => entry.domain === domain && entry.itemId === itemId && (!player || entry.userId === ownId))?.value;
-  const revealLateGame = progressValue('spoilers', 'late-game', true)?.revealed === true;
+  const revealLateGame = data.settings.revealLateGame;
 
   const changeTab = (tab: TabId) => setParams(tab === 'today' ? {} : { tab }, { replace: true });
   const updateFarm = async (patch: object) => {
@@ -87,45 +110,72 @@ export default function JournalPage({ session, onSessionChange }: { session: Ses
     try { await api.putProgress(scope, domain, itemId, value); setSave('saved'); window.setTimeout(() => setSave('idle'), 1400); }
     catch (error: any) { setData(current => current ? { ...current, progress: previous } : current); setSave(error.offline ? 'offline' : 'failed'); }
   };
+  const putProgressBatch = async (updates: Array<{scope:'shared'|'player';domain:string;itemId:string;value:object}>) => {
+    if (!updates.length) return;
+    const previous = data.progress;
+    const keys = new Set(updates.map((entry) => `${entry.scope}:${entry.domain}:${entry.itemId}:${entry.scope === 'player' ? ownId : 'shared'}`));
+    const retained = previous.filter((entry) => !keys.has(`${entry.scope}:${entry.domain}:${entry.itemId}:${entry.userId ?? 'shared'}`));
+    const optimistic = updates.map((entry) => ({ ...entry, userId: entry.scope === 'player' ? ownId : null }));
+    setData((current) => current ? { ...current, progress: [...retained, ...optimistic] } : current);
+    setSave('saving');
+    try { await api.batchProgress(updates); setSave('saved'); window.setTimeout(() => setSave('idle'), 1400); }
+    catch (error: any) {
+      setData((current) => current ? { ...current, progress: previous } : current);
+      setSave(error.offline ? 'offline' : 'failed');
+    }
+  };
   const weatherItemId = `${farm.year}-${farm.season.toLowerCase()}-${farm.day}`;
   const isRaining = progressValue('calendar-weather', weatherItemId)?.raining === true;
-  const reveal = () => putProgress('player', 'spoilers', 'late-game', { revealed: true });
-  const hide = () => putProgress('player', 'spoilers', 'late-game', { revealed: false });
-  const briefing = buildFarmBriefing(farm, revealLateGame);
+  const mailFlags: string[] = progressValue('farmer', 'mail-flags', true)?.received || [];
+  const busUnlocked = progressValue('unlocks', 'bus')?.completed === true || mailFlags.some((flag) => ['ccVault','jojaBus','busRepair'].includes(flag));
+  const setRevealLateGame = async (revealed: boolean) => {
+    const previous = data.settings.revealLateGame;
+    setData((current) => current ? { ...current, settings: { ...current.settings, revealLateGame: revealed } } : current);
+    setSave('saving');
+    try { await api.updateFarmSettings(revealed); setSave('saved'); window.setTimeout(() => setSave('idle'), 1400); }
+    catch (error: any) { setData((current) => current ? { ...current, settings: { ...current.settings, revealLateGame: previous } } : current); setSave(error.offline ? 'offline' : 'failed'); }
+  };
+  const reveal = () => void setRevealLateGame(true);
+  const hide = () => void setRevealLateGame(false);
+  const briefing = buildFarmBriefing(farm, revealLateGame, { busUnlocked });
 
+  const hasLateGameProgress = data.progress.some((entry) => ['monster-goals','walnuts','island-upgrades','raccoon','scraps'].includes(entry.domain) && (entry.value?.completed || entry.value?.found || Number(entry.value?.count) > 0));
   return <div className={`journal-app app-season-${farm.season.toLowerCase()}`}>
     <a className="skip-link" href="#journal-content">Skip to journal content</a>
     <header className="journal-header">
       <div className="journal-header-top">
         <div className="farm-title"><UiIcon name="home" /> {editingName ? <NameEditor value={farm.name} save={name => { setEditingName(false); updateFarm({ name }); }} /> : <button onClick={() => setEditingName(true)}>{farm.name} <small>Edit</small></button>}</div>
+        <button className="farm-switch-button" onClick={() => setFarmManagerOpen(true)}>Switch farm</button>
         <div className="journal-actions"><button className="round-action import-action" onClick={() => setImportOpen(true)} aria-label="Import save file"><UiIcon name="import"/></button><span className={`season-pill season-${farm.season.toLowerCase()}`}><UiIcon name="calendar"/> {farm.season} · Year {farm.year}</span><button className="round-action" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label="Toggle color theme"><UiIcon name={theme === 'dark' ? 'sun' : 'moon'}/></button><button className="round-action" onClick={() => api.logout().then(onSessionChange)} aria-label="Sign out"><UiIcon name="logout"/></button></div>
       </div>
-      <div className="date-controls"><button onClick={() => shiftDay(-1)} aria-label="Previous day">‹</button><div className="date-track"><div><strong>Day {farm.day} of 28</strong><span>{Math.round(farm.day / 28 * 100)}% through {farm.season}</span></div><div className="season-progress"><i style={{ width: `${farm.day / 28 * 100}%` }} /></div><div className="event-dots">{FESTIVALS.filter(event => event.season === farm.season).map(event => <i key={event.id} style={{ left: `${event.day / 28 * 100}%` }} title={`${event.name}: ${event.season} ${event.day}`} />)}</div></div><button onClick={() => shiftDay(1)} aria-label="Next day">›</button></div>
+      <div className="date-controls"><button onClick={() => shiftDay(-1)} aria-label="Previous day">‹</button><div className="date-track"><div><strong>Day {farm.day} of 28</strong><span>{Math.round(farm.day / 28 * 100)}% through {farm.season}</span></div><div className="season-progress"><i style={{ width: `${farm.day / 28 * 100}%` }} /></div><div className="event-dots">{FESTIVALS.filter(event => event.season === farm.season && (revealLateGame || busUnlocked || !event.id.startsWith('desert-festival-'))).map(event => <i key={event.id} style={{ left: `${event.day / 28 * 100}%` }} title={`${event.name}: ${event.season} ${event.day}`} />)}</div></div><button onClick={() => shiftDay(1)} aria-label="Next day">›</button></div>
     </header>
 
     <Briefing reminders={briefing} openTab={changeTab} />
-    <nav className="journal-tabs" aria-label="Farm journal sections">{tabGroups.map(([group,items])=><div className="journal-tab-group" key={group}><small>{group}</small><div>{items.map(([id,icon,label])=><button key={id} className={active===id?'active':''} onClick={()=>changeTab(id)} aria-current={active===id?'page':undefined}>{id==='animals'?<GameIcon src="/game-icons/animals/chicken.webp" label="Animals" size={22}/>:<UiIcon name={icon as UiIconName}/>}<span className="tab-label">{label}</span></button>)}</div></div>)}</nav>
+    <nav className="journal-tabs" aria-label="Farm journal sections">{tabGroups.map(([group,items])=><div className="journal-tab-group" key={group}><small>{group}</small><div>{items.map(([id,icon,label])=><button key={id} className={active===id?'active':''} onClick={()=>changeTab(id)} aria-label={label} aria-current={active===id?'page':undefined}>{id==='animals'?<GameIcon src="/game-icons/animals/chicken.webp" label="Animals" size={22}/>:<UiIcon name={icon as UiIconName}/>}<span className="tab-label">{label}</span></button>)}</div></div>)}</nav>
 
     <main id="journal-content" className="journal-content">
-      {active === 'today' && <TodayTab farm={farm} goals={goals} revealLateGame={revealLateGame} openTab={changeTab} isRaining={isRaining} setRaining={raining => putProgress('shared', 'calendar-weather', weatherItemId, { raining })} />}
+      {active === 'today' && <TodayTab farm={farm} goals={goals} revealLateGame={revealLateGame} busUnlocked={busUnlocked} openTab={changeTab} isRaining={isRaining} setRaining={raining => putProgress('shared', 'calendar-weather', weatherItemId, { raining })} />}
       {active === 'bundles' && <BundlesTab value={progressValue} put={putProgress} revealLateGame={revealLateGame} reveal={reveal} />}
       {active === 'crops' && <CropsTab farm={farm} revealLateGame={revealLateGame} reveal={reveal} />}
-      {active === 'collections' && <Suspense fallback={<TrackerLoading/>}><CollectionsTracker entries={data.progress} ownId={ownId} put={putProgress}/></Suspense>}
+      {active === 'collections' && <Suspense fallback={<TrackerLoading/>}><CollectionsTracker entries={data.progress} ownId={ownId} put={putProgress} batch={putProgressBatch}/></Suspense>}
       {active === 'goals' && <GoalsTab goals={goals} reload={load} revealLateGame={revealLateGame} reveal={reveal} />}
       {active === 'villagers' && <><RelationshipSummary entries={data.progress} ownId={ownId} /><VillagersTab farm={farm} value={progressValue} put={putProgress} revealLateGame={revealLateGame} reveal={reveal} /></>}
       {active === 'animals' && <Suspense fallback={<TrackerLoading/>}><AnimalsTracker entries={data.progress} put={putProgress}/></Suspense>}
-      {active === 'calendar' && <CalendarTab farm={farm} />}
+      {active === 'calendar' && <CalendarTab farm={farm} revealLateGame={revealLateGame} busUnlocked={busUnlocked} />}
       {active === 'fishing' && <FishingTab farm={farm} value={progressValue} put={putProgress} isRaining={isRaining} openTab={changeTab} />}
       {active === 'farmer' && <Suspense fallback={<TrackerLoading/>}><FarmerTracker entries={data.progress} ownId={ownId} put={putProgress}/></Suspense>}
       {active === 'discoveries' && <Suspense fallback={<TrackerLoading/>}><DiscoveriesTracker entries={data.progress} ownId={ownId} put={putProgress} revealLateGame={revealLateGame} reveal={reveal}/></Suspense>}
-      {active === 'perfection' && <Suspense fallback={<TrackerLoading/>}><PerfectionTracker entries={data.progress} members={data.members}/></Suspense>}
-      {active === 'reference' && <ReferenceTab revealLateGame={revealLateGame} reveal={reveal} hide={hide} />}
+      {active === 'late-game' && (revealLateGame || hasLateGameProgress ? <Suspense fallback={<TrackerLoading/>}><LateGameTracker entries={data.progress} ownId={ownId} put={putProgress}/></Suspense> : <SpoilerGate reveal={reveal}/>)}
+      {active === 'perfection' && (revealLateGame || hasLateGameProgress ? <Suspense fallback={<TrackerLoading/>}><PerfectionTracker entries={data.progress} members={data.members}/></Suspense> : <SpoilerGate reveal={reveal}/>)}
+      {active === 'reference' && <Suspense fallback={<TrackerLoading/>}><ReferenceTab revealLateGame={revealLateGame} reveal={reveal} hide={hide} /></Suspense>}
       {active === 'assistant' && <AssistantTab revealLateGame={revealLateGame} reveal={reveal} />}
     </main>
 
     <footer className="journal-footer"><span className={`save-state ${save}`}>{saveLabel(save)}</span><span>{data.members.map(member => member.displayName).join(' & ')}</span>{session.user.role === 'owner' && data.members.length < 2 && <button onClick={() => setInviteOpen(true)}>Invite co-farmer</button>}<span className="verified">Verified for Stardew 1.6.15</span></footer>
     {inviteOpen && <InviteModal close={() => setInviteOpen(false)} done={() => { setInviteOpen(false); load(); }} />}
     {importOpen && <Suspense fallback={<div className="modal-backdrop"><section className="modal-card import-modal"><TrackerLoading/></section></div>}><SaveImportModal session={session} members={data.members} farmVersion={farm.version} close={() => setImportOpen(false)} done={() => { setImportOpen(false); load(); }}/></Suspense>}
+    {farmManagerOpen && <Suspense fallback={null}><FarmManager close={() => setFarmManagerOpen(false)} changed={onSessionChange}/></Suspense>}
   </div>;
 }
 
@@ -140,8 +190,8 @@ function Briefing({ reminders, openTab }: { reminders: FarmReminder[]; openTab: 
   </section>;
 }
 
-function TodayTab({ farm, goals, revealLateGame, openTab, isRaining, setRaining }: { farm: FarmData['farm']; goals: any[]; revealLateGame: boolean; openTab: (tab: TabId) => void; isRaining: boolean; setRaining: (raining: boolean) => void }) {
-  const upcoming = buildUpcomingReminders(farm, 14, revealLateGame).slice(0, 10);
+function TodayTab({ farm, goals, revealLateGame, busUnlocked, openTab, isRaining, setRaining }: { farm: FarmData['farm']; goals: any[]; revealLateGame: boolean; busUnlocked: boolean; openTab: (tab: TabId) => void; isRaining: boolean; setRaining: (raining: boolean) => void }) {
+  const upcoming = buildUpcomingReminders(farm, 14, revealLateGame, { busUnlocked }).slice(0, 10);
   const visibleGoals = goals.filter(goal => revealLateGame || goal.project?.spoilerTier !== 'late-game').filter(goal => !goal.completed).slice(0, 5);
   const daysRemaining = 28 - farm.day;
   const cropDeadlines = CROPS
@@ -188,13 +238,13 @@ function GoalsTab({ goals, reload, revealLateGame, reveal }: { goals: any[]; rel
 }
 
 function VillagersTab({ farm, value, put, revealLateGame, reveal }: { farm: FarmData['farm']; value: (domain: string, id: string, player?: boolean) => any; put: (scope: 'shared' | 'player', domain: string, id: string, value: object) => void; revealLateGame: boolean; reveal: () => void }) {
-  const [all, setAll] = useState(false); const villagers = VILLAGERS.filter(villager => revealLateGame || villager.spoilerTier !== 'late-game').map(villager => ({ ...villager, away: daysUntilBirthday(villager, farm.season, farm.day) })).sort((a, b) => a.away - b.away); const shown = all ? villagers : villagers.slice(0, 10);
+  const [all, setAll] = useState(false); const villagers = VILLAGERS.filter(villager => villager.id !== 'kent' || farm.year >= 2).filter(villager => revealLateGame || villager.spoilerTier !== 'late-game').map(villager => ({ ...villager, away: daysUntilBirthday(villager, farm.season, farm.day) })).sort((a, b) => a.away - b.away); const shown = all ? villagers : villagers.slice(0, 10);
   const setHearts = (id: string, n: number) => put('player', 'relationships', id, { ...(value('relationships', id, true) || {}), hearts: Math.max(0, Math.min(14, n)), source: 'manual' });
   return <><Intro title="Birthdays & loved gifts" text="Nearest birthdays first. Set your own heart level with each villager — it's tracked separately for each farmer." /><div className="villager-grid">{shown.map(villager => { const hearts = value('relationships', villager.id, true)?.hearts ?? value('hearts', villager.id, true)?.hearts ?? 0; return <article className={villager.away === 0 ? 'birthday-today' : villager.away <= 3 ? 'birthday-soon' : ''} key={villager.id}><header><GameIcon src={`/game-icons/villagers/${villager.id}.png`} label={villager.name} /><div><strong>{villager.name}</strong><small>{villager.birthday.season} {villager.birthday.day}</small></div><b>{villager.away === 0 ? 'Today!' : villager.away === 1 ? 'Tomorrow' : `${villager.away}d`}</b></header><div className="heart-track"><span>Your hearts</span><div className="heart-stepper"><button onClick={() => setHearts(villager.id, hearts - 1)} disabled={hearts <= 0} aria-label={`Lower your hearts with ${villager.name}`}>−</button><b>{hearts} <em>❤</em></b><button onClick={() => setHearts(villager.id, hearts + 1)} disabled={hearts >= 14} aria-label={`Raise your hearts with ${villager.name}`}>+</button></div></div><p>Loves</p><div className="gift-chips">{villager.lovedGifts.map(gift => <span key={gift}>{gift}</span>)}</div></article>; })}</div><button className="show-more" onClick={() => setAll(v => !v)}>{all ? 'Show fewer' : `Show all ${villagers.length} villagers`}</button>{!revealLateGame && <SpoilerGate reveal={reveal} />}</>;
 }
 
-function CalendarTab({ farm }: { farm: FarmData['farm'] }) {
-  const [year, setYear] = useState(farm.year % 2 === 0 ? 2 : 1); const events = FESTIVALS.filter(event => event.season === farm.season).sort((a, b) => a.day - b.day); const recipes = QUEEN_OF_SAUCE.filter(entry => entry.year === year);
+function CalendarTab({ farm, revealLateGame, busUnlocked }: { farm: FarmData['farm']; revealLateGame: boolean; busUnlocked: boolean }) {
+  const [year, setYear] = useState(farm.year % 2 === 0 ? 2 : 1); const events = FESTIVALS.filter(event => event.season === farm.season && (revealLateGame || busUnlocked || !event.id.startsWith('desert-festival-'))).sort((a, b) => a.day - b.day); const recipes = QUEEN_OF_SAUCE.filter(entry => entry.year === year);
   return <><Intro title="Valley calendar" text="Festivals, weekly visits, birthdays, and the complete two-year Queen of Sauce rotation." /><section className="calendar-section"><h2><UiIcon name="calendar"/> {farm.season} events</h2><div className="calendar-rows">{events.map(event => <article className={event.day === farm.day ? 'today' : ''} key={event.id}><b>{event.day}</b><UiIcon name="calendar" label={event.name}/><div><strong>{event.name}</strong><small>{event.day === farm.day ? 'Today' : event.day > farm.day ? `In ${event.day - farm.day} days` : 'Earlier this season'}</small></div></article>)}</div></section><section className="calendar-section"><div className="section-heading"><div><small>Every Sunday</small><h1><UiIcon name="tv"/> Queen of Sauce</h1></div><div className="segmented"><button className={year === 1 ? 'active' : ''} onClick={() => setYear(1)}>Year 1</button><button className={year === 2 ? 'active' : ''} onClick={() => setYear(2)}>Year 2</button></div></div><div className="recipe-grid">{recipes.map(recipe => <article className={recipe.season === farm.season && recipe.day === farm.day && ((farm.year - 1) % 2) + 1 === year ? 'today' : ''} key={recipe.id}><span>{recipe.season.slice(0, 3)} {recipe.day}</span><strong>{recipe.name}</strong></article>)}</div><p className="gentle-note">New recipes air on Sundays. Wednesday reruns can help you catch recipes you missed.</p></section></>;
 }
 
@@ -246,7 +296,7 @@ function FishingTab({ farm, value, put, isRaining, openTab }: { farm: FarmData['
   </>;
 }
 
-function ReferenceTab({ revealLateGame, reveal, hide }: { revealLateGame: boolean; reveal: () => void; hide: () => void }) {
+function ReferenceTabLegacy({ revealLateGame, reveal, hide }: { revealLateGame: boolean; reveal: () => void; hide: () => void }) {
   const [query, setQuery] = useState(''); const results = query.trim().length > 1 ? searchCatalog(query, undefined, revealLateGame).slice(0, 30) : [];
   return <><Intro title="Verified reference" text="Search crops, fish, villagers, bundles, buildings, calendar entries, and major collection milestones." /><div className="reference-search"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search for a crop, fish, gift, bundle, or building…" aria-label="Search the Stardew reference" /><span>⌕</span></div>{results.length > 0 && <div className="reference-results">{results.map((record: any) => <article key={`${record.domain}:${record.id}`}><GameIcon src={record.iconPath} label={record.name} size={30}/><div><strong>{record.name}</strong><small>{record.domain} · {record.gameVersion}</small><p>{referenceSummary(record)}</p></div><a href={record.source} target="_blank" rel="noreferrer">Source ↗</a></article>)}</div>}{query.length > 1 && !results.length && <p className="empty-note">No spoiler-safe matches found.</p>}{revealLateGame ? <button className="spoiler-reset" onClick={hide}>Hide late-game details again</button> : <SpoilerGate reveal={reveal} />}</>;
 }
@@ -277,7 +327,7 @@ function Typewriter({ text, onType }: { text: string; onType?: () => void }) {
   useEffect(() => {
     if (reduced) { setCount(text.length); return; }
     setCount(0); let i = 0;
-    const id = window.setInterval(() => { i += 1; setCount(i); onType?.(); if (i >= text.length) window.clearInterval(id); }, 18);
+    const id = window.setInterval(() => { i = Math.min(text.length, i + 4); setCount(i); if (i >= text.length) window.clearInterval(id); }, 40);
     return () => window.clearInterval(id);
   }, [text, reduced]);
   return <span className="typewriter" aria-label={text}>{text.slice(0, count)}{count < text.length && <b className="tw-caret" aria-hidden="true" />}</span>;

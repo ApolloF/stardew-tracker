@@ -14,6 +14,8 @@ export * from './trackers.js';
 export * from './icons.js';
 export * from './features.generated.js';
 export * from './monsters.generated.js';
+export * from './raccoon.js';
+export * from './reference.js';
 import { CROPS } from './crops.js';import { BUNDLE_ROOMS } from './bundles.js';import { VILLAGERS } from './villagers.js';import { FESTIVALS,QUEEN_OF_SAUCE } from './calendar.js';import { FISH } from './fish.js';import { PROJECTS } from './projects.js';import { CHECKLISTS } from './checklists.js';
 export const CATALOG={crops:CROPS,bundles:BUNDLE_ROOMS.flatMap(room=>room.bundles),villagers:VILLAGERS,fish:FISH,calendar:[...FESTIVALS,...QUEEN_OF_SAUCE],projects:PROJECTS,perfection:CHECKLISTS} as const;
 export type CatalogDomain=keyof typeof CATALOG;

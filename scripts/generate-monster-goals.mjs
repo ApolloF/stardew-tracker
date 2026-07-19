@@ -1,1 +1,10 @@
-import fs from'node:fs';const source=process.env.STARDEW_APP_SOURCE||'C:/tmp/stardew-app-reference/src/data';const data=JSON.parse(fs.readFileSync(`${source}/monsters.json`,'utf8'));const rows=Object.entries(data).map(([name,row])=>({id:name.toLowerCase().replace(/[^a-z0-9]+/g,'-'),name,count:row.count,targets:row.targets.filter(target=>!target.endsWith(' (dangerous)')).map(target=>target==='Slimes'?'Green Slime':target)}));fs.writeFileSync('packages/game-data/src/monsters.generated.ts',`export const MONSTER_SLAYER_GOALS=${JSON.stringify(rows,null,2)} as const;\n`);console.log(`Wrote ${rows.length} monster goals.`);
+import fs from 'node:fs';
+import path from 'node:path';
+const commit=process.env.STARDEW_APP_COMMIT||'c916f707740ff7184634b321fb7ad386a6f915e5';
+const source=path.resolve(process.argv[2]||process.env.STARDEW_APP_SOURCE||path.join('..','stardew.app','src','data'));
+if(!fs.existsSync(source))throw new Error(`ApolloF data directory not found: ${source}. Pass it as the first argument or set STARDEW_APP_SOURCE.`);
+const data=JSON.parse(fs.readFileSync(path.join(source,'monsters.json'),'utf8'));
+const rows=Object.entries(data).map(([name,row])=>({id:name.toLowerCase().replace(/[^a-z0-9]+/g,'-'),name,count:row.count,targets:row.targets.filter(target=>!target.endsWith(' (dangerous)')).map(target=>target==='Slimes'?'Green Slime':target)}));
+const output=`// Generated from ApolloF/stardew.app commit ${commit}.\nexport const MONSTER_SLAYER_GOALS=${JSON.stringify(rows,null,2)} as const;\n`;
+fs.writeFileSync('packages/game-data/src/monsters.generated.ts',output);
+console.log(`Wrote ${rows.length} monster goals.`);

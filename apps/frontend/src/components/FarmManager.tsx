@@ -1,0 +1,14 @@
+import { useEffect, useState, type FormEvent } from 'react';
+import { api } from '../api';
+import UiIcon from './UiIcon';
+
+export default function FarmManager({ close, changed }: { close: () => void; changed: () => void }) {
+  const [data, setData] = useState<any>(null);
+  const [creating, setCreating] = useState(false);
+  const [selected, setSelected] = useState<number[]>([]);
+  const [error, setError] = useState('');
+  useEffect(() => { api.farms().then(setData).catch((reason) => setError(reason.message)); }, []);
+  const activate = async (farmId: number) => { if (farmId === data.activeFarmId) return; setError(''); try { await api.activateFarm(farmId); changed(); } catch (reason: any) { setError(reason.message); } };
+  const create = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const name = String(new FormData(event.currentTarget).get('name') || '').trim(); if (!name) return; setError(''); try { await api.createFarm(name, selected); changed(); } catch (reason: any) { setError(reason.message); } };
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) close(); }}><section className="modal-card farm-manager" role="dialog" aria-modal="true" aria-labelledby="farm-manager-title"><header><div><small>Your farms</small><h2 id="farm-manager-title">Choose a farm</h2></div><button onClick={close} aria-label="Close farm chooser">×</button></header>{error && <p className="form-error">{error}</p>}{!data ? <p>Loading farms...</p> : <><div className="farm-choice-list">{data.farms.map((farm: any) => <button key={farm.id} className={farm.id === data.activeFarmId ? 'active' : ''} onClick={() => activate(farm.id)}><UiIcon name="home"/><span><strong>{farm.name}</strong><small>{farm.memberCount} member{farm.memberCount === 1 ? '' : 's'} · {farm.role}</small></span>{farm.id === data.activeFarmId && <b>Current</b>}</button>)}</div><button className="secondary-button" onClick={() => setCreating((value) => !value)}>{creating ? 'Cancel' : '+ New farm'}</button>{creating && <form className="farm-create-form" onSubmit={create}><label>Farm name<input name="name" minLength={1} maxLength={50} autoFocus required /></label>{data.eligibleCollaborators.length > 0 && <fieldset><legend>Invite known collaborators (optional)</legend>{data.eligibleCollaborators.map((person: any) => <label key={person.id}><input type="checkbox" checked={selected.includes(person.id)} disabled={!selected.includes(person.id) && selected.length >= 7} onChange={(event) => setSelected((current) => event.target.checked ? [...current, person.id] : current.filter((id) => id !== person.id))}/>{person.displayName}</label>)}</fieldset>}<p>New farms start separately on Spring 1, Year 1. No progress is copied.</p><button className="journal-primary">Create and switch</button></form>}</>}</section></div>;
+}

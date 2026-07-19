@@ -13,25 +13,29 @@ export default function ReferencePageSafe({ session }: { session: Session }) {
   const [season, setSeason] = useState('All');
   const [progress, setProgress] = useState<Record<string, boolean>>({});
   const [saveState, setSaveState] = useState<SaveState>('idle');
-  const [revealed, setRevealed] = useState(() => localStorage.getItem('public-late-game') === 'revealed');
+  const [revealed, setRevealed] = useState(false);
+  const [settingsReady, setSettingsReady] = useState(false);
+  const [farmYear, setFarmYear] = useState(1);
+  const [busUnlocked, setBusUnlocked] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const valid = (domain in CATALOG ? domain : 'crops') as CatalogDomain;
 
   useEffect(() => { setParams(query ? { q: query } : {}, { replace: true }); }, [query]);
-  useEffect(() => { if (session.user) api.farm().then(data => { const out: Record<string, boolean> = {}; for (const item of data.progress) if (item.domain === valid && item.value?.completed) out[item.itemId] = true; setProgress(out); }).catch(() => setSaveState('offline')); }, [valid, session.user]);
+  useEffect(() => { if (session.user) Promise.all([api.farm(),api.progress([valid === 'villagers' ? 'relationships' : valid,'farmer','unlocks'],'farm')]).then(([data,entries]) => { const out: Record<string, boolean> = {}; for (const item of entries) if (item.domain === (valid === 'villagers' ? 'relationships' : valid) && item.value?.completed) out[item.itemId] = true; const flags=entries.find((item:any)=>item.domain==='farmer'&&item.itemId==='mail-flags'&&item.userId===session.user?.id)?.value?.received||[]; setProgress(out); setRevealed(data.settings.revealLateGame); setFarmYear(data.farm.year); setBusUnlocked(entries.some((item:any)=>item.domain==='unlocks'&&item.itemId==='bus'&&item.value?.completed)||flags.some((flag:string)=>['ccVault','jojaBus','busRepair'].includes(flag))); setSettingsReady(true); }).catch(() => setSaveState('offline')); }, [valid, session.user]);
+  useEffect(() => { if (settingsReady) api.updateFarmSettings(revealed).catch(() => setSaveState('offline')); }, [revealed, settingsReady]);
   const items = useMemo(() => {
-    let rows: any[] = [...CATALOG[valid]].filter(item => revealed || item.spoilerTier !== 'late-game');
+    let rows: any[] = [...CATALOG[valid]].filter(item => revealed || item.spoilerTier !== 'late-game').filter(item => revealed || busUnlocked || !item.id.startsWith('desert-festival-')).filter(item => valid !== 'villagers' || farmYear >= 2 || item.id !== 'kent');
     const needle = query.toLowerCase().trim();
     if (needle) rows = rows.filter(item => `${item.id} ${item.name} ${item.description || ''} ${JSON.stringify(item)}`.toLowerCase().includes(needle));
     if (season !== 'All') rows = rows.filter(item => item.seasons?.includes(season) || item.season === season || item.birthday?.season === season);
     return rows;
-  }, [valid, query, season, revealed]);
+  }, [valid, query, season, revealed, farmYear, busUnlocked]);
   const track = async (id: string) => {
     const next = !progress[id]; setProgress(current => ({ ...current, [id]: next })); setSaveState('saving');
     try { await api.putProgress(valid === 'villagers' ? 'player' : 'shared', valid, id, { completed: next }); setSaveState('saved'); window.setTimeout(() => setSaveState('idle'), 1500); }
     catch (error: any) { setProgress(current => ({ ...current, [id]: !next })); setSaveState(error.offline ? 'offline' : 'failed'); }
   };
-  const reveal = () => { localStorage.setItem('public-late-game', 'revealed'); setRevealed(true); setConfirm(false); };
+  const reveal = () => { setRevealed(true); setConfirm(false); };
 
   return <section className="reference-page"><aside className="reference-nav"><span className="eyebrow">Reference</span>{Object.entries(labels).map(([id, label]) => <Link className={valid === id ? 'active' : ''} key={id} to={`/reference/${id}`}>{label}</Link>)}</aside><div className="reference-content"><div className="reference-header"><div><span className="eyebrow">Verified for 1.6.15</span><h1>{labels[valid]}</h1><p>{items.length} spoiler-safe matching entries · facts link to their source.</p></div>{session.user && <span className={`save-pill ${saveState}`}>{saveState === 'idle' ? 'Private tracking on' : saveState}</span>}</div><div className="filter-bar"><input aria-label="Search this section" value={query} onChange={event => setQuery(event.target.value)} placeholder={`Search ${labels[valid].toLowerCase()}…`} />{['crops', 'fish', 'calendar', 'villagers'].includes(valid) && <select aria-label="Season filter" value={season} onChange={event => setSeason(event.target.value)}><option>All</option>{['Spring', 'Summer', 'Fall', 'Winter'].map(value => <option key={value}>{value}</option>)}</select>}</div>{valid === 'bundles' ? <BundleGrid session={session} progress={progress} track={track} query={query} revealed={revealed} /> : <div className={`catalog-grid domain-${valid}`}>{items.map((item: any) => <article className={`catalog-card ${progress[item.id] ? 'complete' : ''}`} key={item.id}><div className="catalog-card-top"><GameIcon src={item.iconPath} label={item.name} /><div><h2>{item.name}</h2><small>{subtitle(item)}</small></div>{session.user && <button className="round-check" aria-label={`Mark ${item.name} complete`} onClick={() => track(item.id)}>{progress[item.id] ? '✓' : '○'}</button>}</div><p>{details(item, valid)}</p>{item.lovedGifts && <div className="chips">{item.lovedGifts.map((gift: string) => <span key={gift}>{gift}</span>)}</div>}{item.materials && <MaterialList materials={item.materials} />}<a className="source-link" href={item.source} target="_blank" rel="noreferrer">Verify source ↗</a></article>)}</div>}{revealed ? <button className="secondary-button" onClick={() => { localStorage.removeItem('public-late-game'); setRevealed(false); }}>Hide late-game details again</button> : <section className="panel" style={{ marginTop: '1rem' }}><span className="eyebrow">Spoiler protection</span><h2>Late-game entries are hidden</h2><p className="empty-copy">Future locations, people, and progression systems stay out of this reference until you choose to reveal them.</p>{confirm ? <div className="hero-actions"><button className="secondary-button" onClick={() => setConfirm(false)}>Keep hidden</button><button className="primary-button" onClick={reveal}>Reveal late-game details</button></div> : <button className="secondary-button" onClick={() => setConfirm(true)}>Show warning</button>}</section>}</div></section>;
 }

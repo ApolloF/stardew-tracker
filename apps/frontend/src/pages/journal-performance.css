@@ -1,0 +1,31 @@
+.collection-grid > article,
+.crop-grid > article,
+.villager-grid > article,
+.animal-grid > article,
+.perfection-grid > article,
+.catalog-grid > article {
+  content-visibility: auto;
+  contain-intrinsic-size: 120px;
+}
+
+.farm-switch-button {
+  border: 1px solid var(--border, #c7a66d);
+  border-radius: 999px;
+  background: var(--surface, #fff8df);
+  padding: .45rem .75rem;
+  white-space: nowrap;
+}
+
+.farm-manager { max-width: 34rem; }
+.farm-choice-list { display: grid; gap: .5rem; margin: 1rem 0; }
+.farm-choice-list > button { display: flex; gap: .75rem; align-items: center; width: 100%; text-align: left; padding: .8rem; border: 1px solid var(--border, #c7a66d); border-radius: .75rem; background: transparent; }
+.farm-choice-list > button span { display: grid; flex: 1; }
+.farm-choice-list > button.active { background: color-mix(in srgb, var(--accent, #6d8b3d) 16%, transparent); }
+.farm-create-form { display: grid; gap: .85rem; margin-top: 1rem; }
+.farm-create-form label { display: grid; gap: .35rem; }
+.farm-create-form fieldset { display: grid; gap: .35rem; border: 1px solid var(--border, #c7a66d); border-radius: .65rem; }
+.farm-create-form fieldset label { display: flex; align-items: center; gap: .5rem; }
+
+@media (max-width: 540px) {
+  .farm-switch-button { font-size: .78rem; padding: .4rem .55rem; }
+}
