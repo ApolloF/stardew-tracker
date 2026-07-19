@@ -1,0 +1,2 @@
+import{useState}from'react';
+export default function GameIcon({src,emoji='🌱',label,size=36}:{src?:string;emoji?:string;label?:string;size?:number}){const[failed,setFailed]=useState(false);if(!src||failed)return <span className="game-icon-fallback" role={label?'img':undefined} aria-label={label} aria-hidden={label?undefined:true}>{emoji}</span>;return <img className="game-icon" src={src} width={size} height={size} alt={label||''} aria-hidden={label?undefined:true} loading="lazy" onError={()=>setFailed(true)}/>}

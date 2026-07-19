@@ -10,11 +10,16 @@ import { api, type SaveState, type Session } from '../api';
 import './journal.css';
 import './journal-mobile.css';
 import './journal-a11y.css';
+import SaveImportModal from '../components/SaveImportModal';
+import GameIcon from '../components/GameIcon';
+import { AnimalsTracker,CollectionsTracker,PerfectionTracker } from './ExpandedTrackers';
+import RelationshipSummary from './RelationshipSummary';
+import './relationship-summary.css';
 
 const tabs = [
-  ['today', '🌅', 'Today'], ['bundles', '🎁', 'Bundles'], ['crops', '🌱', 'Crops'],
-  ['goals', '📌', 'Goals'], ['villagers', '💖', 'Villagers'], ['calendar', '📅', 'Calendar'],
-  ['fishing', '🎣', 'Fishing'], ['reference', '📖', 'Reference'], ['assistant', '🔮', 'Oracle'],
+  ['today','🌅','Today'],['bundles','🎁','Bundles'],['crops','🌱','Crops'],['goals','📌','Goals'],
+  ['collections','🗃️','Collections'],['villagers','💖','Relationships'],['animals','🐔','Animals'],['calendar','📅','Calendar'],
+  ['fishing','🎣','Fishing'],['perfection','⭐','Perfection'],['reference','📖','Reference'],['assistant','🔮','Oracle'],
 ] as const;
 type TabId = typeof tabs[number][0];
 type FarmData = { farm: { name: string; season: Season; year: number; day: number; version: number }; members: Array<{ id: number; displayName: string; role: string }>; progress: any[] };
@@ -33,6 +38,7 @@ export default function JournalPage({ session, onSessionChange }: { session: Ses
   const [theme, setTheme] = useState(() => localStorage.getItem('journal-theme') || 'light');
   const [editingName, setEditingName] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
   const load = () => Promise.all([api.farm(), api.goals()]).then(([farm, nextGoals]) => { setData(farm); setGoals(nextGoals); setLoadError(false); });
@@ -81,7 +87,7 @@ export default function JournalPage({ session, onSessionChange }: { session: Ses
     <header className="journal-header">
       <div className="journal-header-top">
         <div className="farm-title"><Icon emoji="🏡" /> {editingName ? <NameEditor value={farm.name} save={name => { setEditingName(false); updateFarm({ name }); }} /> : <button onClick={() => setEditingName(true)}>{farm.name} <small>✎</small></button>}</div>
-        <div className="journal-actions"><span className={`season-pill season-${farm.season.toLowerCase()}`}><Icon emoji={seasonEmoji(farm.season)} /> {farm.season} · Year {farm.year}</span><button className="round-action" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label="Toggle color theme">{theme === 'dark' ? '☀️' : '🌙'}</button><button className="round-action" onClick={() => api.logout().then(onSessionChange)} aria-label="Sign out">↪</button></div>
+        <div className="journal-actions"><button className="round-action import-action" onClick={() => setImportOpen(true)} aria-label="Import save file">↥</button><span className={`season-pill season-${farm.season.toLowerCase()}`}><Icon emoji={seasonEmoji(farm.season)} /> {farm.season} · Year {farm.year}</span><button className="round-action" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label="Toggle color theme">{theme === 'dark' ? '☀️' : '🌙'}</button><button className="round-action" onClick={() => api.logout().then(onSessionChange)} aria-label="Sign out">↪</button></div>
       </div>
       <div className="date-controls"><button onClick={() => shiftDay(-1)} aria-label="Previous day">‹</button><div className="date-track"><div><strong>Day {farm.day} of 28</strong><span>{Math.round(farm.day / 28 * 100)}% through {farm.season}</span></div><div className="season-progress"><i style={{ width: `${farm.day / 28 * 100}%` }} /></div><div className="event-dots">{FESTIVALS.filter(event => event.season === farm.season).map(event => <i key={event.id} style={{ left: `${event.day / 28 * 100}%` }} title={`${event.name}: ${event.season} ${event.day}`} />)}</div></div><button onClick={() => shiftDay(1)} aria-label="Next day">›</button></div>
     </header>
@@ -93,16 +99,20 @@ export default function JournalPage({ session, onSessionChange }: { session: Ses
       {active === 'today' && <TodayTab farm={farm} goals={goals} revealLateGame={revealLateGame} openTab={changeTab} isRaining={isRaining} setRaining={raining => putProgress('shared', 'calendar-weather', weatherItemId, { raining })} />}
       {active === 'bundles' && <BundlesTab value={progressValue} put={putProgress} revealLateGame={revealLateGame} reveal={reveal} />}
       {active === 'crops' && <CropsTab farm={farm} revealLateGame={revealLateGame} reveal={reveal} />}
+      {active === 'collections' && <CollectionsTracker entries={data.progress} ownId={ownId} put={putProgress} />}
       {active === 'goals' && <GoalsTab goals={goals} reload={load} revealLateGame={revealLateGame} reveal={reveal} />}
-      {active === 'villagers' && <VillagersTab farm={farm} value={progressValue} put={putProgress} revealLateGame={revealLateGame} reveal={reveal} />}
+      {active === 'villagers' && <><RelationshipSummary entries={data.progress} ownId={ownId} /><VillagersTab farm={farm} value={progressValue} put={putProgress} revealLateGame={revealLateGame} reveal={reveal} /></>}
+      {active === 'animals' && <AnimalsTracker entries={data.progress} put={putProgress} />}
       {active === 'calendar' && <CalendarTab farm={farm} />}
       {active === 'fishing' && <FishingTab farm={farm} value={progressValue} put={putProgress} isRaining={isRaining} openTab={changeTab} />}
+      {active === 'perfection' && <PerfectionTracker entries={data.progress} members={data.members} />}
       {active === 'reference' && <ReferenceTab revealLateGame={revealLateGame} reveal={reveal} hide={hide} />}
       {active === 'assistant' && <AssistantTab revealLateGame={revealLateGame} reveal={reveal} />}
     </main>
 
     <footer className="journal-footer"><span className={`save-state ${save}`}>{saveLabel(save)}</span><span>{data.members.map(member => member.displayName).join(' & ')}</span>{session.user.role === 'owner' && data.members.length < 2 && <button onClick={() => setInviteOpen(true)}>Invite co-farmer</button>}<span className="verified">Verified for Stardew 1.6.15</span></footer>
     {inviteOpen && <InviteModal close={() => setInviteOpen(false)} done={() => { setInviteOpen(false); load(); }} />}
+    {importOpen && <SaveImportModal session={session} members={data.members} farmVersion={farm.version} close={() => setImportOpen(false)} done={() => { setImportOpen(false); load(); }} />}
   </div>;
 }
 
@@ -164,8 +174,8 @@ function GoalsTab({ goals, reload, revealLateGame, reveal }: { goals: any[]; rel
 
 function VillagersTab({ farm, value, put, revealLateGame, reveal }: { farm: FarmData['farm']; value: (domain: string, id: string, player?: boolean) => any; put: (scope: 'shared' | 'player', domain: string, id: string, value: object) => void; revealLateGame: boolean; reveal: () => void }) {
   const [all, setAll] = useState(false); const villagers = VILLAGERS.filter(villager => revealLateGame || villager.spoilerTier !== 'late-game').map(villager => ({ ...villager, away: daysUntilBirthday(villager, farm.season, farm.day) })).sort((a, b) => a.away - b.away); const shown = all ? villagers : villagers.slice(0, 10);
-  const setHearts = (id: string, n: number) => put('player', 'hearts', id, { hearts: Math.max(0, Math.min(14, n)) });
-  return <><Intro title="Birthdays & loved gifts" text="Nearest birthdays first. Set your own heart level with each villager — it's tracked separately for each farmer." /><div className="villager-grid">{shown.map(villager => { const hearts = value('hearts', villager.id, true)?.hearts ?? 0; return <article className={villager.away === 0 ? 'birthday-today' : villager.away <= 3 ? 'birthday-soon' : ''} key={villager.id}><header><span>{villager.emoji}</span><div><strong>{villager.name}</strong><small>{villager.birthday.season} {villager.birthday.day}</small></div><b>{villager.away === 0 ? 'Today!' : villager.away === 1 ? 'Tomorrow' : `${villager.away}d`}</b></header><div className="heart-track"><span>Your hearts</span><div className="heart-stepper"><button onClick={() => setHearts(villager.id, hearts - 1)} disabled={hearts <= 0} aria-label={`Lower your hearts with ${villager.name}`}>−</button><b>{hearts} <em>❤</em></b><button onClick={() => setHearts(villager.id, hearts + 1)} disabled={hearts >= 14} aria-label={`Raise your hearts with ${villager.name}`}>+</button></div></div><p>Loves</p><div className="gift-chips">{villager.lovedGifts.map(gift => <span key={gift}>{gift}</span>)}</div></article>; })}</div><button className="show-more" onClick={() => setAll(v => !v)}>{all ? 'Show fewer' : `Show all ${villagers.length} villagers`}</button>{!revealLateGame && <SpoilerGate reveal={reveal} />}</>;
+  const setHearts = (id: string, n: number) => put('player', 'relationships', id, { ...(value('relationships', id, true) || {}), hearts: Math.max(0, Math.min(14, n)), source: 'manual' });
+  return <><Intro title="Birthdays & loved gifts" text="Nearest birthdays first. Set your own heart level with each villager — it's tracked separately for each farmer." /><div className="villager-grid">{shown.map(villager => { const hearts = value('relationships', villager.id, true)?.hearts ?? value('hearts', villager.id, true)?.hearts ?? 0; return <article className={villager.away === 0 ? 'birthday-today' : villager.away <= 3 ? 'birthday-soon' : ''} key={villager.id}><header><GameIcon src={`/game-icons/villagers/${villager.id}.png`} emoji={villager.emoji} label={villager.name} /><div><strong>{villager.name}</strong><small>{villager.birthday.season} {villager.birthday.day}</small></div><b>{villager.away === 0 ? 'Today!' : villager.away === 1 ? 'Tomorrow' : `${villager.away}d`}</b></header><div className="heart-track"><span>Your hearts</span><div className="heart-stepper"><button onClick={() => setHearts(villager.id, hearts - 1)} disabled={hearts <= 0} aria-label={`Lower your hearts with ${villager.name}`}>−</button><b>{hearts} <em>❤</em></b><button onClick={() => setHearts(villager.id, hearts + 1)} disabled={hearts >= 14} aria-label={`Raise your hearts with ${villager.name}`}>+</button></div></div><p>Loves</p><div className="gift-chips">{villager.lovedGifts.map(gift => <span key={gift}>{gift}</span>)}</div></article>; })}</div><button className="show-more" onClick={() => setAll(v => !v)}>{all ? 'Show fewer' : `Show all ${villagers.length} villagers`}</button>{!revealLateGame && <SpoilerGate reveal={reveal} />}</>;
 }
 
 function CalendarTab({ farm }: { farm: FarmData['farm'] }) {

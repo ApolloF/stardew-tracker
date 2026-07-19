@@ -1,5 +1,5 @@
 // Junimo Journal service worker — app-shell offline, never caches /api.
-const VERSION = 'junimo-v2';
+const VERSION = 'junimo-v3';
 const SHELL = `shell-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
 const PRECACHE = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
@@ -38,7 +38,7 @@ self.addEventListener('fetch', (event) => {
   // Hashed build assets + icons: cache-first, then populate.
   event.respondWith(
     caches.match(req).then((hit) => hit || fetch(req).then((res) => {
-      if (res.ok && (url.pathname.startsWith('/assets/') || url.pathname.endsWith('.png') || url.pathname.endsWith('.webmanifest'))) {
+      if (res.ok && (url.pathname.startsWith('/assets/') || url.pathname.endsWith('.png') || url.pathname.endsWith('.webp') || url.pathname.endsWith('.webmanifest'))) {
         const copy = res.clone();
         caches.open(ASSETS).then((cache) => cache.put(req, copy));
       }
