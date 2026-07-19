@@ -64,6 +64,26 @@ describe('compact journal', () => {
     expect(await screen.findByText('Late-game details are tucked away')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Show warning' })).toBeTruthy();
   });
+
+  it('gives Today reminders specific icons instead of the generic calendar glyph', async () => {
+    render(<MemoryRouter initialEntries={['/dashboard']}><JournalPage session={session} onSessionChange={() => undefined} /></MemoryRouter>);
+    await screen.findByText('Test Farm');
+    // Farm day 7 is a Sunday: the Traveling Cart visits and Queen of Sauce airs, and Lewis's birthday falls on Spring 7.
+    expect(document.querySelector('svg[data-icon="cart"]')).toBeTruthy();
+    expect(document.querySelector('svg[data-icon="tv"]')).toBeTruthy();
+    expect(screen.getByRole('img', { name: "Lewis's birthday" })).toBeTruthy();
+    expect(document.querySelectorAll('.briefing svg[data-icon="calendar"]').length).toBe(0);
+  });
+
+  it('gives every Spring festival on the Calendar tab a distinct, non-generic icon', async () => {
+    render(<MemoryRouter initialEntries={['/dashboard?tab=calendar']}><JournalPage session={session} onSessionChange={() => undefined} /></MemoryRouter>);
+    await screen.findByText('Valley calendar');
+    // Desert Festival stays hidden until the bus is unlocked; Egg Festival and Flower Dance are always visible.
+    expect(screen.getByRole('img', { name: 'Egg Festival' })).toBeTruthy();
+    expect(document.querySelector('svg[data-icon="egg"]')).toBeTruthy();
+    expect(document.querySelector('svg[data-icon="flower"]')).toBeTruthy();
+    expect(document.querySelectorAll('.calendar-rows svg[data-icon="calendar"]').length).toBe(0);
+  });
 });
 describe('farmer and discovery routes',()=>{
   afterEach(cleanup);

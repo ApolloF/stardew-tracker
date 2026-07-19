@@ -34,7 +34,7 @@ function remindersForDate(date: FarmDate, timing: FarmReminder['timing'], reveal
   for (const event of FESTIVALS.filter(entry => entry.season === date.season && entry.day === date.day && (entry.year === undefined || entry.year === date.year))) {
     if (!revealLateGame && event.spoilerTier === 'late-game') continue;
     if (!revealLateGame && event.id.startsWith('desert-festival-') && !visibility.busUnlocked) continue;
-    out.push({ id: `event:${event.id}:${timing}`, timing, category: 'festival', emoji: event.emoji, iconKey: 'calendar', entityId: event.id, title: event.name, detail: `${date.season} ${date.day}`, date, link: '/dashboard?tab=calendar' });
+    out.push({ id: `event:${event.id}:${timing}`, timing, category: 'festival', emoji: event.emoji, iconKey: event.uiIcon || 'calendar', entityId: event.id, title: event.name, detail: `${date.season} ${date.day}`, date, link: '/dashboard?tab=calendar' });
   }
   for (const villager of VILLAGERS.filter(entry => entry.birthday.season === date.season && entry.birthday.day === date.day)) {
     if (!revealLateGame && villager.spoilerTier === 'late-game') continue;
