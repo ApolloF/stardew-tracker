@@ -11,6 +11,8 @@ export interface CatalogRecord extends SourceMeta {
   id: string;
   name: string;
   emoji: string;
+  gameId?: string;
+  iconPath?: string;
   description?: string;
   tags?: string[];
   spoilerTier?: SpoilerTier;
@@ -30,6 +32,8 @@ export interface Crop extends CatalogRecord {
 export interface BundleItem {
   id: string;
   name: string;
+  gameId?: string;
+  iconPath?: string;
   quantity?: number;
   quality?: 'silver' | 'gold' | 'iridium';
   hint: string;

@@ -11,6 +11,7 @@ export * from './projects.js';
 export * from './checklists.js';
 export * from './import-types.js';
 export * from './trackers.js';
+export * from './icons.js';
 export * from './monsters.generated.js';
 import { CROPS } from './crops.js';import { BUNDLE_ROOMS } from './bundles.js';import { VILLAGERS } from './villagers.js';import { FESTIVALS,QUEEN_OF_SAUCE } from './calendar.js';import { FISH } from './fish.js';import { PROJECTS } from './projects.js';import { CHECKLISTS } from './checklists.js';
 export const CATALOG={crops:CROPS,bundles:BUNDLE_ROOMS.flatMap(room=>room.bundles),villagers:VILLAGERS,fish:FISH,calendar:[...FESTIVALS,...QUEEN_OF_SAUCE],projects:PROJECTS,perfection:CHECKLISTS} as const;

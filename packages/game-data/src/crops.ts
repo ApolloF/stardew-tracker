@@ -1,9 +1,10 @@
 import { meta } from './meta.js';
 import type { Crop, Season } from './types.js';
+import { objectSprite } from './icons.js';
 
 const m = meta('Crops');
 const crop = (id: string, name: string, emoji: string, seasons: Season[], growthDays: number, regrowDays: number | null, seedPrice: number | null, sellPrice: number, seedSource: string, extras: Partial<Crop> = {}): Crop => ({
-  ...m, id, name, emoji, seasons, growthDays, regrowDays, seedPrice, sellPrice, seedSource, ...extras,
+  ...m, id, name, emoji, ...objectSprite(name), seasons, growthDays, regrowDays, seedPrice, sellPrice, seedSource, ...extras,
 });
 
 export const CROPS: Crop[] = [

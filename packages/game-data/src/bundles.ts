@@ -1,10 +1,11 @@
 import { meta } from './meta.js';
 import type { Bundle, BundleItem, BundleRoom } from './types.js';
+import { bundleSprite, roomSprite } from './icons.js';
 
 const m = meta('Bundles');
-const item = (id:string, name:string, hint:string, quantity=1, quality?:BundleItem['quality']):BundleItem => ({id,name,hint,quantity,...(quality?{quality}:{})});
+const item = (id:string, name:string, hint:string, quantity=1, quality?:BundleItem['quality']):BundleItem => ({id,name,...bundleSprite(id,name),hint,quantity,...(quality?{quality}:{})});
 const bundle = (roomId:string,id:string,name:string,required:number,reward:string,items:BundleItem[]):Bundle => ({...m,id,name,emoji:'📦',roomId,required,reward,items});
-const room = (id:string,name:string,emoji:string,reward:string,bundles:Bundle[]):BundleRoom => ({...m,id,name,emoji,reward,bundles});
+const room = (id:string,name:string,emoji:string,reward:string,bundles:Bundle[]):BundleRoom => ({...m,id,name,emoji,...roomSprite(id),reward,bundles});
 
 const crafts = [
   bundle('crafts-room','spring-foraging','Spring Foraging Bundle',4,'Spring Seeds ×30',[
